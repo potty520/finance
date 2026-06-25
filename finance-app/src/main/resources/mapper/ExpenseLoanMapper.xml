@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.expense.mapper.ExpenseLoanMapper">
+
+    <select id="selectByApplicant" resultType="com.finance.module.expense.entity.ExpenseLoan">
+        SELECT * FROM exp_loan
+        WHERE deleted = 0
+        <if test="applicant != null">
+            AND applicant_id = #{applicant}
+        </if>
+        ORDER BY loan_date DESC, id DESC
+    </select>
+
+</mapper>

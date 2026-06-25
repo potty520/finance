@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.cashier.mapper.CashAccountMapper">
+
+    <select id="selectActive" resultType="com.finance.module.cashier.entity.CashAccount">
+        SELECT * FROM cash_account
+        WHERE deleted = 0 AND status = 1
+        ORDER BY account_code
+    </select>
+
+</mapper>

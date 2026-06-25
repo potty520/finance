@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.system.mapper.SysUserMapper">
+
+    <select id="selectByUsername" resultType="com.finance.module.system.entity.SysUser">
+        SELECT * FROM sys_user
+        WHERE username = #{username} AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <select id="selectRoleCodesByUserId" resultType="string">
+        SELECT DISTINCT r.role_code
+        FROM sys_role r
+        INNER JOIN sys_user_role ur ON r.id = ur.role_id
+        WHERE ur.user_id = #{userId} AND r.deleted = 0 AND r.status = 1
+    </select>
+
+    <select id="selectPermCodesByUserId" resultType="string">
+        SELECT DISTINCT m.perm_code
+        FROM sys_menu m
+        INNER JOIN sys_role_menu rm ON m.id = rm.menu_id
+        INNER JOIN sys_user_role ur ON rm.role_id = ur.role_id
+        WHERE ur.user_id = #{userId}
+          AND m.deleted = 0
+          AND m.status = 1
+          AND m.perm_code IS NOT NULL
+          AND m.perm_code != ''
+    </select>
+
+    <select id="selectMenusByUserId" resultType="com.finance.module.system.entity.SysMenu">
+        SELECT DISTINCT m.*
+        FROM sys_menu m
+        INNER JOIN sys_role_menu rm ON m.id = rm.menu_id
+        INNER JOIN sys_user_role ur ON rm.role_id = ur.role_id
+        WHERE ur.user_id = #{userId}
+          AND m.deleted = 0
+          AND m.status = 1
+        ORDER BY m.parent_id, m.sort_order
+    </select>
+
+</mapper>

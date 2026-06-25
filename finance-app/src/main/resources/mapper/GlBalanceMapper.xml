@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.ledger.mapper.GlBalanceMapper">
+
+    <select id="selectByPeriod" resultType="com.finance.module.ledger.entity.GlBalance">
+        SELECT * FROM gl_balance
+        WHERE period_code = CONCAT(#{year}, LPAD(#{period}, 2, '0'))
+        ORDER BY subject_code
+    </select>
+
+    <select id="sumBySubjectType" resultType="map">
+        SELECT s.category_code AS category,
+               SUM(b.opening_debit - b.opening_credit) AS opening_balance,
+               SUM(b.period_debit) AS period_debit,
+               SUM(b.period_credit) AS period_credit,
+               SUM(b.ending_debit - b.ending_credit) AS ending_balance
+        FROM gl_balance b
+        INNER JOIN gl_account_subject s ON b.subject_code = s.subject_code AND s.deleted = 0
+        WHERE b.period_code = CONCAT(#{year}, LPAD(#{period}, 2, '0'))
+        GROUP BY s.category_code
+    </select>
+
+    <select id="selectBalanceSheetItems" resultType="map">
+        SELECT s.subject_code   AS subjectCode,
+               s.subject_name   AS subjectName,
+               s.category_code  AS categoryCode,
+               c.category_name  AS categoryName,
+               s.balance_direction AS balanceDirection,
+               COALESCE(b.opening_debit, 0)  AS openingDebit,
+               COALESCE(b.opening_credit, 0) AS openingCredit,
+               COALESCE(b.ending_debit, 0)   AS endingDebit,
+               COALESCE(b.ending_credit, 0)  AS endingCredit
+        FROM gl_account_subject s
+        INNER JOIN gl_account_category c
+            ON s.category_code = c.category_code AND c.deleted = 0
+        LEFT JOIN gl_balance b
+            ON b.subject_code = s.subject_code
+           AND b.period_code = CONCAT(#{year}, LPAD(#{period}, 2, '0'))
+        WHERE s.deleted = 0
+          AND s.is_leaf = 1
+          AND s.category_code IN ('ASSET', 'LIAB', 'EQUITY')
+        ORDER BY s.category_code, s.subject_code
+    </select>
+
+</mapper>

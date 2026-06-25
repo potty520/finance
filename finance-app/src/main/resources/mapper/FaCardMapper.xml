@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.asset.mapper.FaCardMapper">
+
+    <select id="sumByCategory" resultType="map">
+        SELECT
+            COALESCE(c.category_name, '未分类') AS categoryName,
+            COUNT(a.id) AS cardCount,
+            COALESCE(SUM(a.original_value), 0) AS totalOriginalValue,
+            COALESCE(SUM(a.net_value), 0) AS totalNetValue
+        FROM fa_asset a
+        LEFT JOIN fa_category c ON a.category_id = c.id AND c.deleted = 0
+        WHERE a.deleted = 0
+        GROUP BY c.category_name
+        ORDER BY categoryName
+    </select>
+
+</mapper>

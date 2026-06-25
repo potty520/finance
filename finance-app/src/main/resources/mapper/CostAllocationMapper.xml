@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.cost.mapper.CostAllocationMapper">
+
+    <select id="sumByCenter" resultType="map">
+        SELECT
+            from_center_id AS centerId,
+            SUM(amount) AS totalAmount,
+            COUNT(*) AS allocationCount
+        FROM cost_allocation
+        WHERE deleted = 0
+          AND period_code = CONCAT(#{year}, LPAD(#{period}, 2, '0'))
+        GROUP BY from_center_id
+        ORDER BY from_center_id
+    </select>
+
+</mapper>

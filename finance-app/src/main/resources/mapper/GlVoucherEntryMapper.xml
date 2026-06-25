@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.ledger.mapper.GlVoucherEntryMapper">
+
+    <select id="selectByVoucherId" resultType="com.finance.module.ledger.entity.GlVoucherEntry">
+        SELECT * FROM gl_voucher_entry
+        WHERE voucher_id = #{voucherId}
+        ORDER BY line_no ASC
+    </select>
+
+    <delete id="deleteByVoucherId">
+        DELETE FROM gl_voucher_entry WHERE voucher_id = #{voucherId}
+    </delete>
+
+</mapper>

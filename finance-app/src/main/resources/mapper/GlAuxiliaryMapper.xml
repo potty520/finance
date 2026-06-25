@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.ledger.mapper.GlAuxiliaryMapper">
+
+    <select id="selectByType" resultType="com.finance.module.ledger.entity.GlAuxiliary">
+        SELECT * FROM gl_auxiliary_item
+        WHERE type_code = #{auxType} AND deleted = 0 AND status = 1
+        ORDER BY item_code
+    </select>
+
+</mapper>

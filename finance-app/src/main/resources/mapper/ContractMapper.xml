@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.contract.mapper.ContractMapper">
+
+    <select id="stats" resultType="map">
+        SELECT status, COUNT(*) AS count, COALESCE(SUM(total_amount), 0) AS totalAmount
+        FROM ctr_sales_contract
+        WHERE deleted = 0
+        GROUP BY status
+        ORDER BY status
+    </select>
+
+    <select id="sumAmount" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(total_amount), 0)
+        FROM ctr_sales_contract
+        WHERE deleted = 0
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+    </select>
+
+</mapper>

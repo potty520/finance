@@ -1,0 +1,147 @@
+// ========================================
+// 全局样式 - 财务管理平台
+// ========================================
+
+// CSS 变量
+:root {
+  --primary: #409eff;
+  --primary-light: #66b1ff;
+  --primary-dark: #3a8ee6;
+  --success: #67c23a;
+  --warning: #e6a23c;
+  --danger: #f56c6c;
+  --info: #909399;
+  --bg-page: #f0f2f5;
+  --bg-card: #ffffff;
+  --text-primary: #303133;
+  --text-regular: #606266;
+  --text-secondary: #909399;
+  --text-placeholder: #c0c4cc;
+  --border-base: #ebeef5;
+  --border-light: #e4e7ed;
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --radius-base: 8px;
+  --radius-sm: 6px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  text-decoration: none;
+  color: var(--primary);
+}
+
+// 工具类
+.flex { display: flex; }
+.flex-1 { flex: 1; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-center { display: flex; justify-content: center; align-items: center; }
+.flex-col { display: flex; flex-direction: column; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.gap-20 { gap: 20px; }
+.gap-24 { gap: 24px; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-placeholder); }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-20 { margin-top: 20px; }
+.mt-24 { margin-top: 24px; }
+.mb-16 { margin-bottom: 16px; }
+
+// 页面容器
+.page-container {
+  padding: 20px;
+  background: var(--bg-card);
+  border-radius: var(--radius-base);
+  min-height: calc(100vh - 130px);
+  box-shadow: var(--shadow-card);
+}
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-base);
+}
+.page-header h2, .page-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.search-bar {
+  background: #fafafa;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  border: 1px solid var(--border-light);
+}
+.search-bar .el-form-item { margin-bottom: 0; }
+.toolbar {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// 全局过渡
+.fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+.slide-up-enter-active, .slide-up-leave-active { transition: all 0.3s ease; }
+.slide-up-enter-from { transform: translateY(20px); opacity: 0; }
+.slide-up-leave-to { transform: translateY(-10px); opacity: 0; }
+
+// 美化滚动条
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c0c4cc; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #909399; }
+
+// Element Plus 全局微调
+.el-card {
+  border-radius: var(--radius-base) !important;
+  border: 1px solid var(--border-base) !important;
+  box-shadow: var(--shadow-card) !important;
+  transition: box-shadow var(--transition);
+  &:hover {
+    box-shadow: var(--shadow-hover) !important;
+  }
+}
+.el-button--primary {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  &:hover {
+    background-color: var(--primary-light) !important;
+    border-color: var(--primary-light) !important;
+  }
+}
+.el-table {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.el-pagination {
+  margin-top: 16px;
+  justify-content: flex-end;
+}

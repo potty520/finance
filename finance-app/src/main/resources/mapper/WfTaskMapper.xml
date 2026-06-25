@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.workflow.mapper.WfTaskMapper">
+
+    <select id="selectByInstance" resultType="com.finance.module.workflow.entity.WfTask">
+        SELECT * FROM wf_approval_record
+        WHERE doc_id = #{instanceId}
+        ORDER BY step_no ASC, id ASC
+    </select>
+
+    <select id="selectPendingByUser" resultType="com.finance.module.workflow.entity.WfTask">
+        SELECT * FROM wf_approval_record
+        WHERE approver_id = #{userId}
+          AND status = 'PENDING'
+        ORDER BY submit_time DESC, id DESC
+    </select>
+
+</mapper>

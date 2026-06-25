@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.ledger.mapper.GlSubjectMapper">
+
+    <select id="selectByCategory" resultType="com.finance.module.ledger.entity.GlSubject">
+        SELECT * FROM gl_account_subject
+        WHERE category_code = #{category} AND deleted = 0 AND status = 1
+        ORDER BY subject_code
+    </select>
+
+    <select id="selectByCode" resultType="com.finance.module.ledger.entity.GlSubject">
+        SELECT * FROM gl_account_subject
+        WHERE subject_code = #{code} AND deleted = 0
+        LIMIT 1
+    </select>
+
+</mapper>

@@ -11,7 +11,7 @@
       <el-form :inline="true" :model="search">
         <el-form-item label="凭证号"><el-input v-model="search.voucherNo" clearable /></el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="search.status" clearable>
+          <el-select v-model="search.status" clearable class="status-select" placeholder="全部状态">
             <el-option label="草稿" value="DRAFT" />
             <el-option label="待审核" value="APPROVING" />
             <el-option label="已审核" value="APPROVED" />
@@ -41,11 +41,11 @@
           <el-tag :type="statusType(row.status)">{{ statusName(row.status) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="300" fixed="right">
+      <el-table-column label="操作" width="320" fixed="right" class-name="voucher-action-col">
         <template #default="{ row }">
-          <el-button type="info" link @click.stop="onPreview(row)">预览</el-button>
-          <el-button type="primary" link @click.stop="onPrint(row)">打印</el-button>
-          <el-button type="primary" link @click.stop="onEdit(row)" v-if="canEdit(row)">编辑</el-button>
+          <el-button link class="action-btn action-preview" @click.stop="onPreview(row)">预览</el-button>
+          <el-button link class="action-btn action-print" @click.stop="onPrint(row)">打印</el-button>
+          <el-button link class="action-btn action-edit" @click.stop="onEdit(row)" v-if="canEdit(row)">编辑</el-button>
           <el-button type="success" link @click.stop="onApprove(row)" v-if="canApprove(row)">审核</el-button>
           <el-button type="warning" link @click.stop="onPost(row)" v-if="canPost(row)">过账</el-button>
           <el-button type="danger" link @click.stop="onDel(row)" v-if="canDelete(row)">删除</el-button>
@@ -119,8 +119,8 @@
             </el-form-item>
           </el-col>
         </el-row>
-        <el-divider>分录</el-divider>
-        <el-table :data="form.entries" border>
+        <el-divider content-position="left">分录明细</el-divider>
+        <el-table :data="form.entries" border class="entry-table">
           <el-table-column label="科目编码" width="180">
             <template #default="{ row }">
               <el-select
@@ -182,13 +182,13 @@
               <el-input-number v-model="row.creditAmount" :precision="2" :min="0" :controls="false" style="width:100%" />
             </template>
           </el-table-column>
-          <el-table-column label="" width="60">
+          <el-table-column label="" width="72" align="center">
             <template #default="{ $index }">
-              <el-button type="danger" link @click="form.entries.splice($index, 1)">删</el-button>
+              <el-button link class="entry-del-btn" @click="form.entries.splice($index, 1)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
-        <el-button type="primary" link @click="addEntry" style="margin-top:8px;">+ 添加分录</el-button>
+        <el-button class="add-entry-btn" @click="addEntry">+ 添加分录</el-button>
       </el-form>
       <template #footer>
         <el-button @click="dialog.visible = false">取消</el-button>
@@ -465,6 +465,88 @@ watch(
 </script>
 
 <style scoped lang="scss">
+.status-select {
+  width: 140px;
+}
+
+:deep(.voucher-action-col) {
+  .cell {
+    white-space: nowrap;
+  }
+}
+
+.action-btn {
+  font-weight: 500;
+  padding: 0 6px;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.action-preview {
+  color: #606266 !important;
+
+  &:hover {
+    color: #303133 !important;
+  }
+}
+
+.action-print {
+  color: #00897b !important;
+
+  &:hover {
+    color: #00695c !important;
+  }
+}
+
+.action-edit {
+  color: #d48806 !important;
+
+  &:hover {
+    color: #ad6800 !important;
+  }
+}
+
+.entry-table {
+  margin-top: 4px;
+
+  :deep(.el-table__header th) {
+    background: #f5f7fa;
+    color: #303133;
+    font-weight: 600;
+  }
+
+  :deep(.el-table__body tr:hover > td) {
+    background: #fafcff;
+  }
+}
+
+.entry-del-btn {
+  color: #cf1322 !important;
+  font-weight: 500;
+
+  &:hover {
+    color: #a8071a !important;
+  }
+}
+
+.add-entry-btn {
+  margin-top: 12px;
+  width: 100%;
+  border: 1px dashed #91caff;
+  background: #f0f7ff;
+  color: #0958d9;
+  font-weight: 500;
+
+  &:hover,
+  &:focus {
+    color: #0958d9;
+    border-color: #409eff;
+    background: #e6f4ff;
+  }
+}
+
 :deep(.voucher-preview-dialog .el-dialog__body) {
   padding-top: 8px;
   background: #f5f5f5;

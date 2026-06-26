@@ -10,10 +10,16 @@ import com.finance.module.contract.entity.PurchaseContract;
 import com.finance.module.contract.mapper.ContractMapper;
 import com.finance.module.contract.mapper.PurchaseContractMapper;
 import com.finance.module.contract.service.IContractService;
+import com.finance.common.service.FileStorageService;
+import com.alibaba.fastjson2.JSON;
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -27,6 +33,7 @@ public class ContractController {
     @Resource private IContractService contractService;
     @Resource private ContractMapper contractMapper;
     @Resource private PurchaseContractMapper purchaseContractMapper;
+    @Resource private FileStorageService fileStorageService;
 
     @GetMapping("/page")
     public Result<PageResult<Contract>> page(
@@ -70,6 +77,28 @@ public class ContractController {
 
     @PostMapping
     public Result<Contract> save(@RequestBody Contract c) {
+        return Result.success(contractService.save(c));
+    }
+
+    /** 导入电子合同（PDF/Word 等），自动创建合同草稿 */
+    @PostMapping("/import")
+    public Result<Contract> importContract(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam String contractType,
+            @RequestParam(required = false) String contractName) throws IOException {
+        Map<String, Object> fileInfo = fileStorageService.store(file, "contract");
+        Contract c = new Contract();
+        c.setContractType(contractType);
+        String name = StringUtils.hasText(contractName) ? contractName.trim() : (String) fileInfo.get("fileName");
+        if (name != null && name.contains(".")) {
+            name = name.substring(0, name.lastIndexOf('.'));
+        }
+        c.setContractName(name);
+        c.setAttachment(JSON.toJSONString(fileInfo));
+        c.setSignDate(LocalDate.now());
+        c.setStatus("0");
+        c.setOwnerId(1L);
+        c.setOwnerName("管理员");
         return Result.success(contractService.save(c));
     }
 

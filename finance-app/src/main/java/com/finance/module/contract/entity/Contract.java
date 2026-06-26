@@ -29,7 +29,7 @@ public class Contract implements Serializable {
     private LocalDate endDate;
     @TableField(exist = false) private String payType;
     @TableField(exist = false) private String content;
-    @TableField(exist = false) private String attachment;
+    private String attachment;
     private Long ownerId;
     @TableField(exist = false) private String ownerName;
     @TableField(exist = false) private Long deptId;

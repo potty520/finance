@@ -24,6 +24,7 @@ public class PurchaseContract implements Serializable {
     private LocalDate startDate;
     private LocalDate endDate;
     private String status;
+    private String attachment;
     private Long ownerId;
     private String remark;
     private LocalDateTime createTime;

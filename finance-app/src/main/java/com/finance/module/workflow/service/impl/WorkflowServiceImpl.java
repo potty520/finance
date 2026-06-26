@@ -28,6 +28,8 @@ public class WorkflowServiceImpl implements IWorkflowService {
     public WfInstance start(String businessType, Long businessId, String businessNo,
                             Long initiatorId, String initiatorName, BigDecimal amount) {
         WfInstance inst = new WfInstance();
+        inst.setDocType(businessType != null ? businessType : "common");
+        inst.setDocTypeName(businessType + "审批");
         inst.setFlowCode("WF-" + System.currentTimeMillis());
         inst.setFlowName(businessType + "审批");
         inst.setBusinessType(businessType);
@@ -46,6 +48,14 @@ public class WorkflowServiceImpl implements IWorkflowService {
 
         for (int i = 1; i <= levels; i++) {
             WfTask t = new WfTask();
+            t.setDocType(businessType != null ? businessType : "common");
+            t.setDocId(businessId);
+            t.setDocNo(businessNo);
+            t.setStepNo(i);
+            t.setSubmitterId(initiatorId);
+            t.setSubmitterName(initiatorName);
+            t.setApproverId(2L);
+            t.setApproverName("审批员" + i);
             t.setInstanceId(inst.getId());
             t.setFlowCode(inst.getFlowCode());
             t.setBusinessType(businessType);
@@ -120,6 +130,10 @@ public class WorkflowServiceImpl implements IWorkflowService {
         taskMapper.updateById(t);
 
         WfTask newT = new WfTask();
+        newT.setDocType(t.getDocType());
+        newT.setDocId(t.getDocId());
+        newT.setDocNo(t.getDocNo());
+        newT.setStepNo(t.getStepNo());
         newT.setInstanceId(t.getInstanceId());
         newT.setFlowCode(t.getFlowCode());
         newT.setBusinessType(t.getBusinessType());
@@ -128,7 +142,8 @@ public class WorkflowServiceImpl implements IWorkflowService {
         newT.setLevel(t.getLevel());
         newT.setNodeName("L" + t.getLevel() + "审批(转交)");
         newT.setAssignee(toUserId);
-        newT.setAssigneeName(toUserName);
+        newT.setApproverId(toUserId);
+        newT.setApproverName(toUserName);
         newT.setStatus("0");
         newT.setCreateTime(LocalDateTime.now());
         taskMapper.insert(newT);

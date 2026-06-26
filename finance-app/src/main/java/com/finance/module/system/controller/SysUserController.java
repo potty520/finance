@@ -58,7 +58,14 @@ public class SysUserController {
     @PreAuthorize("hasAuthority('system:user:add')")
     public Result<Boolean> add(@RequestBody Map<String, Object> body) {
         SysUser user = new SysUser();
-        org.springframework.beans.BeanUtils.copyProperties(body, user);
+        user.setUsername((String) body.get("username"));
+        user.setPassword((String) body.get("password"));
+        user.setRealName((String) body.get("realName"));
+        user.setPhone((String) body.get("phone"));
+        user.setEmail((String) body.get("email"));
+        user.setGender(body.get("gender") != null ? ((Number) body.get("gender")).intValue() : null);
+        user.setDeptId(body.get("deptId") != null ? ((Number) body.get("deptId")).longValue() : null);
+        user.setStatus(body.get("status") != null ? ((Number) body.get("status")).intValue() : null);
         @SuppressWarnings("unchecked")
         List<Long> roleIds = (List<Long>) body.get("roleIds");
         return Result.success(userService.saveUser(user, roleIds));
@@ -68,7 +75,15 @@ public class SysUserController {
     @PreAuthorize("hasAuthority('system:user:edit')")
     public Result<Boolean> edit(@RequestBody Map<String, Object> body) {
         SysUser user = new SysUser();
-        org.springframework.beans.BeanUtils.copyProperties(body, user);
+        user.setId(body.get("id") != null ? ((Number) body.get("id")).longValue() : null);
+        user.setUsername((String) body.get("username"));
+        user.setPassword((String) body.get("password"));
+        user.setRealName((String) body.get("realName"));
+        user.setPhone((String) body.get("phone"));
+        user.setEmail((String) body.get("email"));
+        user.setGender(body.get("gender") != null ? ((Number) body.get("gender")).intValue() : null);
+        user.setDeptId(body.get("deptId") != null ? ((Number) body.get("deptId")).longValue() : null);
+        user.setStatus(body.get("status") != null ? ((Number) body.get("status")).intValue() : null);
         @SuppressWarnings("unchecked")
         List<Long> roleIds = (List<Long>) body.get("roleIds");
         return Result.success(userService.updateUser(user, roleIds));

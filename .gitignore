@@ -1,8 +1,30 @@
-target/
-node_modules/
-dist/
+# 构建产物
+finance-app/target/
+finance-web/dist/
+finance-web/node_modules/
+finance-app/data/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# 临时文件
 *.log
+*.tmp
+*.swp
+*~
+*.pyc
+__pycache__/
+tmp/
+test_report/
+
+# 测试报告
+*测试报告*.md
+
+# OS
 .DS_Store
-*.class
-*.jar
-.vite/
+Thumbs.db

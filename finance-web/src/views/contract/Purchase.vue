@@ -249,6 +249,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Upload, UploadFilled } from '@element-plus/icons-vue'
 
 import request from '@/utils/request'
+import { CONTRACT_TYPE_MAP, STATUS_MAP } from '@/constants/enums'
 
 import { importContract, downloadFile, previewFile } from '@/api/file'
 

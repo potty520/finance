@@ -30,7 +30,9 @@ function iconComponent(name) {
     '费用管理': ElementPlusIconsVue.Money,
     '合同管理': ElementPlusIconsVue.Tickets,
     '项目管理': ElementPlusIconsVue.Aim,
-    '系统管理': ElementPlusIconsVue.Setting
+    '系统管理': ElementPlusIconsVue.Setting,
+    '税务管理': ElementPlusIconsVue.DocumentChecked,
+    '财务报表': ElementPlusIconsVue.Document
   }
   return map[props.parentPath] || ElementPlusIconsVue.Menu
 }

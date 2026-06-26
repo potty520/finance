@@ -6,7 +6,7 @@
       <el-table-column prop="customerName" label="客户" width="160" />
       <el-table-column prop="receiptDate" label="收款日期" width="120" />
       <el-table-column prop="amount" label="金额" align="right" />
-      <el-table-column prop="status" label="状态" width="100" />
+      <el-table-column label="状态" width="100"><template #default="{row}"><el-tag :type="STATUS_TAG_TYPE[row.status]">{{ { DRAFT:'草稿',PENDING:'待审核',APPROVED:'已审核',POSTED:'已过账',VOIDED:'已作废',RECEIVED:'已收款' }[row.status] }}</el-tag></template></el-table-column>
     </el-table>
   </div>
 </template>
@@ -14,6 +14,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import request from '@/utils/request'
+import { STATUS_MAP } from '@/constants/enums'
 
 const loading = ref(false)
 const data = reactive({ list: [] })

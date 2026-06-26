@@ -10,6 +10,8 @@ import com.finance.common.exception.BusinessException;
 import com.finance.common.response.PageResult;
 import com.finance.common.response.ResultCode;
 import com.finance.common.util.CommonUtil;
+import com.finance.common.util.MenuTreeUtil;
+import com.finance.module.system.entity.SysMenu;
 import com.finance.module.system.entity.SysUser;
 import com.finance.module.system.mapper.SysUserMapper;
 import com.finance.module.system.service.ISysUserService;
@@ -41,14 +43,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     public Map<String, Object> login(String username, String password) {
         SysUser user = baseMapper.selectByUsername(username);
         if (user == null) {
-            throw new BusinessException(ResultCode.LOGIN_ERROR);
+            throw new BusinessException(ResultCode.BAD_REQUEST, "用户名或密码错误");
         }
-        log.error("DEBUG LOGIN: input-pwd=[{}] len={}, db-hash=[{}] len={}",
-                password, password != null ? password.length() : 0,
-                user.getPassword(), user.getPassword() != null ? user.getPassword().length() : 0);
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            log.error("DEBUG LOGIN: BCrypt match FAILED");
-            throw new BusinessException(ResultCode.LOGIN_ERROR);
+            throw new BusinessException(ResultCode.BAD_REQUEST, "用户名或密码错误");
         }
         if (user.getStatus() == null || user.getStatus() != 1) {
             throw new BusinessException(ResultCode.USER_DISABLED);
@@ -56,6 +54,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 查询角色与权限
         List<String> roles = baseMapper.selectRoleCodesByUserId(user.getId());
         List<String> perms = baseMapper.selectPermCodesByUserId(user.getId());
+
+        // 查询菜单
+        List<SysMenu> allMenus = baseMapper.selectMenusByUserId(user.getId());
+        List<SysMenu> menus = MenuTreeUtil.buildTree(MenuTreeUtil.filterNavMenus(allMenus), 0L);
+
         // 生成 token
         String token = jwtUtil.generateToken(user.getId(), user.getUsername());
 
@@ -79,6 +82,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         result.put("deptName", user.getDeptName());
         result.put("roles", roles);
         result.put("permissions", perms);
+        result.put("menus", menus);
         return result;
     }
 
@@ -114,7 +118,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Transactional(rollbackFor = Exception.class)
     public boolean saveUser(SysUser user, List<Long> roleIds) {
         if (StrUtil.isBlank(user.getUsername()) || StrUtil.isBlank(user.getPassword())) {
-            throw new BusinessException("用户名和密码不能为空");
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "用户名和密码不能为空");
         }
         // 校验用户名唯一
         SysUser exist = baseMapper.selectByUsername(user.getUsername());

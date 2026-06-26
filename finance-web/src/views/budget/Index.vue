@@ -22,7 +22,7 @@
       <el-table-column prop="budgetNo" label="预算单号" width="180" />
       <el-table-column prop="fiscalYear" label="年度" width="80" />
       <el-table-column prop="fiscalPeriod" label="期间" width="80" />
-      <el-table-column prop="budgetType" label="类型" width="120" />
+      <el-table-column label="类型" width="120"><template #default="{row}">{{ BUDGET_TYPE_MAP[row.budgetType] || row.budgetType }}</template></el-table-column>
       <el-table-column prop="subjectName" label="科目" />
       <el-table-column prop="deptName" label="部门" width="120" />
       <el-table-column prop="amount" label="金额" align="right" />
@@ -77,6 +77,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import request from '@/utils/request'
+import { BUDGET_TYPE_MAP, STATUS_MAP } from '@/constants/enums'
 
 const loading = ref(false)
 const data = reactive({ list: [] })

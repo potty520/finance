@@ -338,8 +338,7 @@ const handleQuick = (path) => {
 
 <style scoped lang="scss">
 .dashboard {
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 // ===== 统计卡片 =====
@@ -405,7 +404,7 @@ const handleQuick = (path) => {
 }
 .stat-body { flex: 1; min-width: 0; }
 .stat-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
-.stat-value { font-size: 26px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
 .stat-change { font-size: 12px; display: flex; align-items: center; gap: 2px; }
 .stat-change.up { color: var(--success); }
 .stat-change.down { color: var(--danger); }

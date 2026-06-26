@@ -9,7 +9,7 @@
       <el-table-column prop="supplierName" label="供应商" width="160" />
       <el-table-column prop="paymentDate" label="付款日期" width="120" />
       <el-table-column prop="amount" label="金额" align="right" />
-      <el-table-column prop="paymentType" label="方式" width="100" />
+      <el-table-column label="方式" width="100"><template #default="{row}">{{ { BANK:'银行转账',CASH:'现金',CHECK:'支票',DRAFT:'汇票',ALIPAY:'支付宝',WECHAT:'微信支付',OTHER:'其他' }[row.paymentType] || row.paymentType }}</template></el-table-column>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
           <el-tag>{{ row.status || '-' }}</el-tag>
@@ -23,6 +23,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import request from '@/utils/request'
+import { STATUS_MAP } from '@/constants/enums'
 
 const loading = ref(false)
 const data = reactive({ list: [] })

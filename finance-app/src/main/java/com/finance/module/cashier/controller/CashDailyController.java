@@ -35,6 +35,12 @@ public class CashDailyController {
         qw.orderByDesc(CashDaily::getTransDate);
         Page<CashDaily> p = mapper.selectPage(
                 new Page<>(CommonUtil.safePageNum(pageNum), CommonUtil.safePageSize(pageSize)), qw);
+        // 动态生成单号（DB 无此列）
+        for (CashDaily d : p.getRecords()) {
+            if (d.getBillNo() == null || d.getBillNo().isEmpty()) {
+                d.setBillNo("CD-" + d.getTransDate().toString().replace("-","") + "-" + String.format("%04d", d.getId()));
+            }
+        }
         return Result.success(CommonUtil.toPageResult(p));
     }
 
@@ -45,6 +51,9 @@ public class CashDailyController {
 
     @PostMapping
     public Result<Boolean> add(@RequestBody CashDaily daily) {
+        if (daily.getBillNo() == null || daily.getBillNo().isEmpty()) {
+            daily.setBillNo("CD-" + System.currentTimeMillis());
+        }
         if (daily.getStatus() == null) daily.setStatus("POSTED");
         return Result.success(mapper.insert(daily) > 0);
     }

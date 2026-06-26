@@ -34,6 +34,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import request from '@/utils/request'
+import { BUSINESS_TYPE_MAP } from '@/constants/enums'
 
 const list = ref([])
 const projects = ref([])

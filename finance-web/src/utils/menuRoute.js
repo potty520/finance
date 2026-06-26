@@ -152,6 +152,9 @@ const COMPONENT_ROUTE_MAP = {
 
 
 
+  'tax/Vat': '/tax/vat',
+
+
   'report/bs/index': '/report/balance',
 
   'report/is/index': '/report/income',
@@ -194,7 +197,8 @@ const PATH_PREFIX_ROUTE_MAP = {
 
   consolidation: '/consol',
 
-  report: '/report'
+  report: '/report',
+  tax: '/tax'
 
 }
 

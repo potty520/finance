@@ -6,7 +6,7 @@
     </div>
     <div class="search-bar">
       <el-form :inline="true">
-        <el-form-item label="账户"><el-select v-model="query.accountId" clearable><el-option v-for="a in accounts" :key="a.id" :label="a.accountName" :value="a.id" /></el-select></el-form-item>
+        <el-form-item label="账户"><el-select v-model="query.accountId" clearable style="width:160px"><el-option v-for="a in accounts" :key="a.id" :label="a.accountName" :value="a.id" /></el-select></el-form-item>
         <el-form-item label="日期"><el-date-picker v-model="query.date" type="date" /></el-form-item>
         <el-form-item><el-button type="primary" @click="loadData">查询</el-button></el-form-item>
       </el-form>
@@ -36,7 +36,7 @@
         <el-form-item label="单号"><el-input v-model="form.billNo" /></el-form-item>
         <el-form-item label="日期"><el-date-picker v-model="form.transDate" type="date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item>
         <el-form-item label="账户">
-          <el-select v-model="form.accountId">
+          <el-select v-model="form.accountId" style="width:160px">
             <el-option v-for="a in accounts" :key="a.id" :label="a.accountName" :value="a.id" />
           </el-select>
         </el-form-item>
@@ -63,6 +63,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import request from '@/utils/request'
+import { IO_TYPE_MAP2 } from '@/constants/enums'
 
 const loading = ref(false)
 const accounts = ref([])

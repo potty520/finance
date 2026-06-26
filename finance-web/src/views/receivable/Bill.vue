@@ -15,6 +15,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import request from '@/utils/request'
+import { BILL_TYPE_MAP, STATUS_MAP } from '@/constants/enums'
 
 const loading = ref(false)
 const data = reactive({ list: [] })

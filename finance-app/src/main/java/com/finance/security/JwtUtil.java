@@ -13,6 +13,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * JWT 工具类
@@ -20,6 +23,9 @@ import java.util.Map;
 @Slf4j
 @Component
 public class JwtUtil {
+
+    /** Token 黑名单 (内存) */
+    private final ConcurrentMap<String, Long> blacklist = new ConcurrentHashMap<>();
 
     @Value("${jwt.secret}")
     private String secret;
@@ -98,7 +104,36 @@ public class JwtUtil {
      * 校验 Token
      */
     public boolean validateToken(String token) {
+        if (isBlacklisted(token)) return false;
         Claims claims = parseToken(token);
         return claims != null && !isTokenExpired(token);
+    }
+
+    /**
+     * 将 token 加入黑名单（登出时调用）
+     */
+    public void blacklistToken(String token) {
+        if (token != null && !token.isEmpty()) {
+            blacklist.put(token, System.currentTimeMillis());
+        }
+    }
+
+    /**
+     * token 是否在黑名单中
+     */
+    public boolean isBlacklisted(String token) {
+        return token != null && blacklist.containsKey(token);
+    }
+
+    /**
+     * 清理过期 token（可定期调用）
+     */
+    public void cleanExpiredBlacklist() {
+        long now = System.currentTimeMillis();
+        Set<String> toRemove = blacklist.entrySet().stream()
+                .filter(e -> now - e.getValue() > expire * 1000)
+                .map(Map.Entry::getKey)
+                .collect(java.util.stream.Collectors.toSet());
+        toRemove.forEach(blacklist::remove);
     }
 }

@@ -29,4 +29,6 @@ public class ProjectBudget implements Serializable {
 
     @TableField(exist = false)
     private String projectName;
+    @TableField(exist = false)
+    private String subjectName;
 }

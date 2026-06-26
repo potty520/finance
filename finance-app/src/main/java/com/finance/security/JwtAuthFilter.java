@@ -54,6 +54,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(token) && token.startsWith(prefix)) {
             token = token.substring(prefix.length());
             try {
+                // 检查黑名单
+                if (jwtUtil.isBlacklisted(token)) {
+                    writeUnauthorized(response, ResultCode.UNAUTHORIZED.getCode(), "Token已失效，请重新登录");
+                    return;
+                }
                 String username = jwtUtil.getUsernameFromToken(token);
                 if (StringUtils.hasText(username)
                         && SecurityContextHolder.getContext().getAuthentication() == null) {

@@ -1,6 +1,7 @@
 package com.finance.module.cashier.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -15,25 +16,35 @@ import java.time.LocalDateTime;
 public class CashBill implements Serializable {
     private static final long serialVersionUID = 1L;
     @TableId(type = IdType.AUTO) private Long id;
+
+    @TableField("bill_no")
     private String billNo;
     /** 类型：1-汇票 2-本票 3-支票 4-其他 */
+    @TableField("bill_type")
     private String billType;
+    /** 方向：IN/OUT */
+    @TableField("direction")
+    private String direction;
     private String drawer;
-    private String drawee;
+    @TableField("payee")
+    private String payee;
+    @TableField("issue_date")
     private LocalDate issueDate;
+    @TableField("due_date")
     private LocalDate dueDate;
     private BigDecimal amount;
-    private String currencyCode;
-    /** 状态：1-未使用 2-已使用 3-已背书 4-已贴现 5-已作废 */
+    /** 状态：HOLD/REGISTERED/USED/CANCELED */
     private String status;
-    private String acceptBank;
-    private String usePurpose;
+    @TableField("bank_name")
+    private String bankName;
+    @TableField("customer_id")
     private Long customerId;
-    private String customerName;
+    @TableField("supplier_id")
     private Long supplierId;
-    private String supplierName;
     private String remark;
+    @TableField("create_time")
     private LocalDateTime createTime;
+    @TableField("update_time")
     private LocalDateTime updateTime;
     private Integer deleted;
 }

@@ -72,6 +72,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Minus } from '@element-plus/icons-vue'
 import request from '@/utils/request'
+import { IO_TYPE_MAP2 } from '@/constants/enums'
 
 const loading = ref(false)
 const goods = ref([])

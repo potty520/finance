@@ -1,0 +1,54 @@
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f2027"/>
+      <stop offset="50%" style="stop-color:#203a43"/>
+      <stop offset="100%" style="stop-color:#2c5364"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd700"/>
+      <stop offset="100%" style="stop-color:#f0a500"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="400" height="300" fill="url(#bg)"/>
+
+  <!-- 装饰圆环 -->
+  <circle cx="320" cy="80" r="180" fill="none" stroke="white" stroke-width="0.5" opacity="0.05"/>
+  <circle cx="320" cy="80" r="140" fill="none" stroke="white" stroke-width="0.5" opacity="0.08"/>
+  <circle cx="320" cy="80" r="100" fill="none" stroke="white" stroke-width="0.5" opacity="0.1"/>
+
+  <!-- 账簿 -->
+  <g filter="url(#shadow)">
+    <rect x="100" y="70" width="145" height="170" rx="4" fill="white" stroke="#4a90d9" stroke-width="2"/>
+    <line x1="100" y1="108" x2="245" y2="108" stroke="#4a90d9" stroke-width="2"/>
+    <!-- 账簿内页线条 -->
+    <line x1="120" y1="130" x2="225" y2="130" stroke="#4a90d9" stroke-width="1.5" opacity="0.3"/>
+    <line x1="120" y1="148" x2="215" y2="148" stroke="#4a90d9" stroke-width="1.5" opacity="0.3"/>
+    <line x1="120" y1="166" x2="220" y2="166" stroke="#4a90d9" stroke-width="1.5" opacity="0.3"/>
+    <line x1="120" y1="184" x2="200" y2="184" stroke="#4a90d9" stroke-width="1.5" opacity="0.3"/>
+    <line x1="120" y1="202" x2="210" y2="202" stroke="#4a90d9" stroke-width="1.5" opacity="0.3"/>
+
+    <!-- 表格式数据 -->
+    <rect x="120" y="212" width="105" height="18" rx="1" fill="none" stroke="#2a5298" stroke-width="0.8" opacity="0.3"/>
+    <line x1="170" y1="212" x2="170" y2="230" stroke="#2a5298" stroke-width="0.8" opacity="0.3"/>
+    <line x1="195" y1="212" x2="195" y2="230" stroke="#2a5298" stroke-width="0.8" opacity="0.3"/>
+  </g>
+
+  <!-- 金币 -->
+  <g filter="url(#shadow)">
+    <circle cx="172" cy="85" r="25" fill="url(#gold)" stroke="#c18a00" stroke-width="2"/>
+    <text x="172" y="91" text-anchor="middle" font-size="20" font-weight="bold" fill="#8b6200" font-family="serif">¥</text>
+  </g>
+
+  <!-- 小金币 -->
+  <circle cx="240" cy="75" r="10" fill="url(#gold)" stroke="#c18a00" stroke-width="1" opacity="0.7"/>
+  <text x="240" y="79" text-anchor="middle" font-size="9" font-weight="bold" fill="#8b6200" font-family="serif" opacity="0.7">¥</text>
+
+  <!-- 品牌文字 -->
+  <text x="200" y="285" text-anchor="middle" font-size="16" font-weight="normal" fill="white" opacity="0.6" font-family="serif" letter-spacing="8">清清爽爽 · 明明白白</text>
+</svg>

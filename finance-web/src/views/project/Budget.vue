@@ -9,7 +9,7 @@
           <el-tag>{{ row.budgetType === 'REVENUE' ? '收入' : '成本' }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="subjectCode" label="科目" width="120" />
+      <el-table-column prop="subjectName" label="科目" width="120" />
       <el-table-column prop="amount" label="预算金额" align="right" />
       <el-table-column prop="remark" label="备注" />
     </el-table>
@@ -19,6 +19,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import request from '@/utils/request'
+import { BUDGET_TYPE_MAP } from '@/constants/enums'
 
 const loading = ref(false)
 const data = reactive({ list: [] })

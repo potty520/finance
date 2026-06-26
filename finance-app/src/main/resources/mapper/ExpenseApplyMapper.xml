@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.expense.mapper.ExpenseApplyMapper">
+    <!-- 费用分析：按类型汇总 -->
+    <select id="sumBySubject" resultType="java.util.HashMap">
+        SELECT
+            ea.apply_type AS subjectCode,
+            CASE ea.apply_type
+                WHEN 'TRAVEL' THEN '差旅费'
+                WHEN 'OFFICE' THEN '办公费'
+                WHEN 'ENTERTAIN' THEN '招待费'
+                WHEN 'TRANSPORT' THEN '交通费'
+                WHEN 'OTHER' THEN '其他费用'
+                ELSE ea.apply_type
+            END AS subjectName,
+            COALESCE(SUM(ea.total_amount), 0) AS totalAmount,
+            COUNT(ea.id) AS applyCount
+        FROM exp_application ea
+        WHERE ea.deleted = 0
+          AND YEAR(ea.apply_date) = #{year}
+          AND MONTH(ea.apply_date) = #{period}
+        GROUP BY ea.apply_type
+        ORDER BY totalAmount DESC
+    </select>
+</mapper>

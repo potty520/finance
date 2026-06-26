@@ -75,6 +75,7 @@ import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import request from '@/utils/request'
+import { DISPOSAL_TYPE_MAP } from '@/constants/enums'
 
 const route = useRoute()
 const pageTitle = computed(() => route.meta.title || '固定资产')

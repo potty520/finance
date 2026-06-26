@@ -7,7 +7,7 @@
       <el-table-column prop="assetName" label="资产名称" />
       <el-table-column prop="disposalDate" label="处置日期" width="120" />
       <el-table-column prop="disposalAmount" label="处置金额" align="right" width="120" />
-      <el-table-column prop="disposalType" label="处置方式" width="120" />
+      <el-table-column label="处置方式" width="120"><template #default="{row}">{{ DISPOSAL_TYPE_MAP[row.disposalType] || row.disposalType }}</template></el-table-column>
     </el-table>
   </div>
 </template>
@@ -15,6 +15,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import request from '@/utils/request'
+import { DISPOSAL_TYPE_MAP } from '@/constants/enums'
 
 const loading = ref(false)
 const data = reactive({ list: [] })

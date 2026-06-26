@@ -12,6 +12,8 @@ import com.finance.module.project.mapper.ProjectBudgetMapper;
 import com.finance.module.project.mapper.ProjectLedgerMapper;
 import com.finance.module.project.mapper.ProjectMapper;
 import com.finance.module.project.service.IProjectService;
+import com.finance.module.ledger.mapper.GlSubjectMapper;
+import com.finance.module.ledger.entity.GlSubject;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -26,6 +28,7 @@ public class ProjectController {
     @Resource private ProjectMapper projectMapper;
     @Resource private ProjectLedgerMapper ledgerMapper;
     @Resource private ProjectBudgetMapper projectBudgetMapper;
+    @Resource private GlSubjectMapper glSubjectMapper;
 
     @GetMapping("/page")
     public Result<PageResult<Project>> page(
@@ -66,7 +69,17 @@ public class ProjectController {
         LambdaQueryWrapper<ProjectBudget> qw = new LambdaQueryWrapper<>();
         if (projectId != null) qw.eq(ProjectBudget::getProjectId, projectId);
         qw.eq(ProjectBudget::getDeleted, 0).orderByDesc(ProjectBudget::getCreateTime);
-        return Result.success(projectBudgetMapper.selectList(qw));
+        List<ProjectBudget> list = projectBudgetMapper.selectList(qw);
+        // 填充科目名称
+        List<GlSubject> subjects = glSubjectMapper.selectList(null);
+        java.util.Map<String, String> nameMap = new java.util.HashMap<>();
+        for (GlSubject s : subjects) {
+            nameMap.put(s.getSubjectCode(), s.getSubjectName());
+        }
+        for (ProjectBudget b : list) {
+            b.setSubjectName(nameMap.getOrDefault(b.getSubjectCode(), b.getSubjectCode()));
+        }
+        return Result.success(list);
     }
 
     @GetMapping("/stats")

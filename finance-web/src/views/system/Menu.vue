@@ -9,7 +9,7 @@
       <el-table-column prop="menuCode" label="权限标识" width="180" />
       <el-table-column prop="menuType" label="类型" width="100">
         <template #default="{ row }">
-          <el-tag>{{ { 'D': '目录', 'M': '菜单', 'B': '按钮' }[row.menuType] }}</el-tag>
+          <el-tag>{{ { 'M': '目录', 'C': '菜单', 'F': '按钮', 'button': '按钮' }[row.menuType] || row.menuType }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="path" label="路径" width="200" />
@@ -51,6 +51,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import request from '@/utils/request'
+import { MENU_TYPE_MAP } from '@/constants/enums'
 
 const loading = ref(false)
 const data = reactive({ list: [] })

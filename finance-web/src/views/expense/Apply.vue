@@ -7,7 +7,7 @@
     <div class="search-bar">
       <el-form :inline="true">
         <el-form-item label="状态">
-          <el-select v-model="query.status" clearable>
+          <el-select v-model="query.status" clearable style="width:100px">
             <el-option label="待审" value="0" />
             <el-option label="通过" value="1" />
             <el-option label="驳回" value="2" />
@@ -67,6 +67,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import request from '@/utils/request'
+import { APPLY_TYPE_MAP, STATUS_MAP } from '@/constants/enums'
 
 const loading = ref(false)
 const data = reactive({ list: [] })

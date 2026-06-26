@@ -18,6 +18,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import request from '@/utils/request'
+import { STATUS_MAP, WAREHOUSE_TYPE_MAP } from '@/constants/enums'
 
 const loading = ref(false)
 const data = reactive({ list: [] })

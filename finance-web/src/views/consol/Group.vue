@@ -7,9 +7,9 @@
     <el-table :data="data.list" v-loading="loading" border default-expand-all row-key="id" :tree-props="{ children: 'children' }">
       <el-table-column prop="groupCode" label="编码" width="160" />
       <el-table-column prop="groupName" label="名称" />
-      <el-table-column prop="groupType" label="类型" width="120">
+      <el-table-column label="类型" width="100">
         <template #default="{ row }">
-          <el-tag>{{ { 'HQ': '总部', 'SUB': '子公司', 'BR': '分公司' }[row.groupType] || row.groupType }}</el-tag>
+          <el-tag size="small">{{ { 'HQ': '总部', 'SUB': '子公司', 'BR': '分公司' }[row.groupType] || row.groupType }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="ownershipRatio" label="持股比例" width="120">
@@ -34,7 +34,7 @@
         <el-form-item label="编码"><el-input v-model="form.groupCode" /></el-form-item>
         <el-form-item label="名称"><el-input v-model="form.groupName" /></el-form-item>
         <el-form-item label="类型">
-          <el-select v-model="form.groupType">
+          <el-select v-model="form.groupType" style="width:100%" placeholder="请选择">
             <el-option label="总部" value="HQ" />
             <el-option label="子公司" value="SUB" />
             <el-option label="分公司" value="BR" />
@@ -56,6 +56,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import request from '@/utils/request'
+import { GROUP_TYPE_MAP, STATUS_MAP } from '@/constants/enums'
 
 const loading = ref(false)
 const data = reactive({ list: [] })

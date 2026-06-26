@@ -72,6 +72,8 @@ const routes = [
       { path: 'report/income', name: 'RptIncome', component: () => import('@/views/report/Income.vue'), meta: { title: '利润表' } },
       { path: 'report/cashflow', name: 'RptCashflow', component: () => import('@/views/report/Cashflow.vue'), meta: { title: '现金流量表' } },
       { path: 'report/custom', name: 'RptCustom', component: () => import('@/views/report/Custom.vue'), meta: { title: '自定义报表' } },
+      // 报税
+      { path: 'tax/vat', name: 'TaxVat', component: () => import('@/views/tax/Vat.vue'), meta: { title: '增值税申报' } },
       // 费用
       { path: 'expense/apply', name: 'ExpApply', component: () => import('@/views/expense/Apply.vue'), meta: { title: '我的申请' } },
       { path: 'expense/repay', name: 'ExpRepay', component: () => import('@/views/expense/Repay.vue'), meta: { title: '我的报销' } },

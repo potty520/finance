@@ -7,7 +7,7 @@
     <el-table :data="data.list" border>
       <el-table-column prop="reportCode" label="编码" width="180" />
       <el-table-column prop="reportName" label="名称" />
-      <el-table-column prop="reportType" label="类型" width="120" />
+      <el-table-column label="类型" width="120"><template #default="{row}">{{ REPORT_TYPE_MAP[row.reportType] || row.reportType }}</template></el-table-column>
       <el-table-column prop="fiscalYear" label="年度" width="80" />
       <el-table-column prop="fiscalPeriod" label="期间" width="80" />
       <el-table-column prop="status" label="状态" width="100">
@@ -44,6 +44,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import request from '@/utils/request'
+import { REPORT_TYPE_MAP, STATUS_MAP } from '@/constants/enums'
 
 const data = reactive({ list: [] })
 const dialog = reactive({ visible: false, title: '' })

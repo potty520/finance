@@ -29,15 +29,10 @@
       <el-table-column prop="signDate" label="签订日期" width="120" />
 
       <el-table-column label="电子合同" width="120" align="center">
-
         <template #default="{ row }">
-
           <template v-if="hasAttachment(row.attachment)">
-
-            <el-button link type="primary" @click="onPreviewAttachment(row)">预览</el-button>
-
-            <el-button link type="primary" @click="onDownloadAttachment(row)">下载</el-button>
-
+            <el-button type="warning" link size="small" @click="onPreviewAttachment(row)">预览</el-button>
+            <el-button type="success" link size="small" @click="onDownloadAttachment(row)">下载</el-button>
           </template>
 
           <span v-else class="text-muted">—</span>
@@ -249,6 +244,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Upload, UploadFilled } from '@element-plus/icons-vue'
 
 import request from '@/utils/request'
+import { CONTRACT_TYPE_MAP, STATUS_MAP } from '@/constants/enums'
 
 import { importContract, downloadFile, previewFile } from '@/api/file'
 

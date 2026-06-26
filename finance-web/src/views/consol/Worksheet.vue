@@ -47,6 +47,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
+import { OFFSET_TYPE_MAP } from '@/constants/enums'
 
 const loading = ref(false)
 const generating = ref(false)

@@ -72,6 +72,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import request from '@/utils/request'
+import { STATUS_MAP, SUBJECT_TYPE_MAP } from '@/constants/enums'
 
 const loading = ref(false)
 const data = reactive({ list: [] })

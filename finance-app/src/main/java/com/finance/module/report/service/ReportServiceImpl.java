@@ -197,7 +197,7 @@ public class ReportServiceImpl {
     }
 
     private BigDecimal netBalance(BigDecimal debit, BigDecimal credit, String direction) {
-        if ("CREDIT".equalsIgnoreCase(direction)) {
+        if ("CREDIT".equalsIgnoreCase(direction) || "贷方".equals(direction)) {
             return credit.subtract(debit);
         }
         return debit.subtract(credit);

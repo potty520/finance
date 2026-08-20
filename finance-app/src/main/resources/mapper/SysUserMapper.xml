@@ -15,6 +15,13 @@
         WHERE ur.user_id = #{userId} AND r.deleted = 0 AND r.status = 1
     </select>
 
+    <select id="selectRoleIdsByUserId" resultType="long">
+        SELECT DISTINCT ur.role_id
+        FROM sys_user_role ur
+        INNER JOIN sys_role r ON r.id = ur.role_id
+        WHERE ur.user_id = #{userId} AND r.deleted = 0 AND r.status = 1
+    </select>
+
     <select id="selectPermCodesByUserId" resultType="string">
         SELECT DISTINCT m.perm_code
         FROM sys_menu m

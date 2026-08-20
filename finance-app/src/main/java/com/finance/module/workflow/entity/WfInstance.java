@@ -26,33 +26,23 @@ public class WfInstance implements Serializable {
     @JsonIgnore
     private Integer deleted;
 
-    @TableField(exist = false)
     private String flowCode;
 
-    @TableField(exist = false)
     private String flowName;
 
-    @TableField(exist = false)
     private String businessType;
 
-    @TableField(exist = false)
     private String businessNo;
 
-    @TableField(exist = false)
     private Long businessId;
 
-    @TableField(exist = false)
     private String currentNode;
 
-    @TableField(exist = false)
     private Integer currentLevel;
 
-    @TableField(exist = false)
     private Long initiator;
 
-    @TableField(exist = false)
     private String initiatorName;
 
-    @TableField(exist = false)
     private LocalDateTime finishTime;
 }

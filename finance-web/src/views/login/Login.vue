@@ -2,8 +2,8 @@
   <div class="login-container">
     <div class="login-box">
       <div class="login-header">
-        <h1>财务管理系统</h1>
-        <p>Enterprise Financial Management</p>
+        <h1>清账智能财务系统</h1>
+        <p>QingZhang Intelligent Finance</p>
       </div>
       <el-form ref="formRef" :model="form" :rules="rules" size="large" @keyup.enter="onLogin">
         <el-form-item prop="username">
@@ -17,7 +17,6 @@
         </el-form-item>
         <el-button type="primary" :loading="loading" style="width:100%" @click="onLogin">登 录</el-button>
       </el-form>
-      <div class="login-tip">默认账号: admin / 123456</div>
     </div>
   </div>
 </template>
@@ -33,7 +32,7 @@ const router = useRouter()
 const userStore = useUserStore()
 const formRef = ref()
 const loading = ref(false)
-const form = reactive({ username: 'admin', password: '123456', remember: true })
+const form = reactive({ username: '', password: '', remember: true })
 const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
@@ -57,15 +56,18 @@ const onLogin = async () => {
 
 <style scoped lang="scss">
 .login-container {
-  height: 100vh; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  height: 100vh;
+  background:
+    linear-gradient(135deg, rgba(15,30,50,.85) 0%, rgba(23,50,86,.75) 50%, rgba(31,94,170,.55) 100%),
+    url('@/assets/login-bg.png') center/cover no-repeat;
   display: flex; align-items: center; justify-content: center;
 }
 .login-box {
-  width: 400px; padding: 40px; background: #fff; border-radius: 8px;
-  box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+  width: 400px; padding: 40px; background: rgba(255,255,255,.96); border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.25);
+  backdrop-filter: blur(6px);
 }
 .login-header { text-align: center; margin-bottom: 30px; }
-.login-header h1 { margin: 0 0 8px 0; color: #1e3c72; }
+.login-header h1 { margin: 0 0 8px 0; color: #1f5eaa; }
 .login-header p { margin: 0; color: #999; font-size: 12px; }
-.login-tip { text-align: center; color: #999; font-size: 12px; margin-top: 16px; }
 </style>

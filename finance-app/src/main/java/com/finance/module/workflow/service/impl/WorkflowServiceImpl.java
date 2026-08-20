@@ -39,12 +39,12 @@ public class WorkflowServiceImpl implements IWorkflowService {
         inst.setStatus(1);
         inst.setInitiator(initiatorId);
         inst.setInitiatorName(initiatorName);
+        inst.setCurrentLevel(1);
         inst.setCreateTime(LocalDateTime.now());
         instanceMapper.insert(inst);
 
         // 根据金额决定层级：>10000 二级审批
         int levels = (amount != null && amount.compareTo(new BigDecimal("10000")) > 0) ? 2 : 1;
-        inst.setCurrentLevel(1);
 
         for (int i = 1; i <= levels; i++) {
             WfTask t = new WfTask();

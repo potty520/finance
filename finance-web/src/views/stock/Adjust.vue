@@ -9,6 +9,17 @@
       <el-table-column prop="quantity" label="数量" align="right" />
       <el-table-column prop="amount" label="金额" align="right" />
     </el-table>
+
+    <el-pagination
+      v-model:current-page="pager.pageNum"
+      v-model:page-size="pager.pageSize"
+      :total="data.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      :page-sizes="[10, 20, 50, 100]"
+      @current-change="loadData"
+      @size-change="loadData"
+      style="margin-top:16px; justify-content: flex-end;"
+    />
   </div>
 </template>
 
@@ -17,13 +28,15 @@ import { ref, reactive, onMounted } from 'vue'
 import request from '@/utils/request'
 
 const loading = ref(false)
-const data = reactive({ list: [] })
+const data = reactive({ list: [], total: 0 })
+const pager = reactive({ pageNum: 1, pageSize: 10 })
 
 const loadData = async () => {
   loading.value = true
   try {
-    const res = await request({ url: '/stock/io/page', method: 'get', params: { pageNum: 1, pageSize: 50 } })
-    data.list = res.data.records || []
+    const res = await request({ url: '/stock/io/page', method: 'get', params: { pageNum: pager.pageNum, pageSize: pager.pageSize } })
+    data.list = res.data.records
+    data.total = res.data.total || 0
   } finally { loading.value = false }
 }
 

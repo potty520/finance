@@ -53,6 +53,36 @@ public class PayableController {
                         .orderByAsc(ApSupplier::getSupplierCode)));
     }
 
+    @PostMapping("/supplier")
+    public Result<Boolean> addSupplier(@RequestBody ApSupplier supplier) {
+        if (supplier.getSupplierCode() == null || supplier.getSupplierCode().isEmpty()
+                || supplier.getSupplierName() == null || supplier.getSupplierName().isEmpty()) {
+            return Result.error("供应商编码与供应商名称不能为空");
+        }
+        if (supplier.getStatus() == null) supplier.setStatus(1);
+        return Result.success(supplierMapper.insert(supplier) > 0);
+    }
+
+    @PutMapping("/supplier")
+    public Result<Boolean> editSupplier(@RequestBody ApSupplier supplier) {
+        if (supplier.getId() == null) {
+            return Result.error("缺少供应商ID");
+        }
+        return Result.success(supplierMapper.updateById(supplier) > 0);
+    }
+
+    @DeleteMapping("/supplier/{id}")
+    public Result<Boolean> delSupplier(@PathVariable Long id) {
+        ApSupplier s = supplierMapper.selectById(id);
+        if (s == null) return Result.success(true);
+        Long cnt = invoiceMapper.selectCount(new LambdaQueryWrapper<ApInvoice>()
+                .eq(ApInvoice::getSupplierId, id).eq(ApInvoice::getDeleted, 0));
+        if (cnt != null && cnt > 0) {
+            return Result.error("该供应商存在采购发票记录，不可删除，可将其停用");
+        }
+        return Result.success(supplierMapper.deleteById(id) > 0);
+    }
+
     @GetMapping("/invoice/page")
     public Result<PageResult<ApInvoice>> invoicePage(
             @RequestParam(required = false) Long pageNum,

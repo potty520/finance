@@ -1,13 +1,15 @@
 <script setup>
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { resolveMenuRoute, filterRouteMenus } from '@/utils/menuRoute'
+import { getModuleColor } from '@/utils/moduleColor'
 import { computed } from 'vue'
 
 defineOptions({ name: 'SidebarMenuItem' })
 
 const props = defineProps({
   menus: { type: Array, default: () => [] },
-  parentPath: { type: String, default: '' }
+  parentPath: { type: String, default: '' },
+  accent: { type: Object, default: null }
 })
 
 const visibleMenus = computed(() => filterRouteMenus(props.menus))
@@ -44,6 +46,15 @@ function childParentPath(menu) {
 function menuRoute(menu) {
   return resolveMenuRoute(menu, props.parentPath)
 }
+
+function moduleStyle(menu) {
+  const mc = getModuleColor(menu?.menuName || props.parentPath)
+  return { '--mc': mc.color, '--mc-rgb': mc.rgb }
+}
+
+function accentFor(menu) {
+  return props.accent || getModuleColor(menu?.menuName || props.parentPath)
+}
 </script>
 
 <template>
@@ -52,17 +63,19 @@ function menuRoute(menu) {
       v-if="menu.menuType === 'M' && menu.children && menu.children.length"
       :index="`group-${menu.id}`"
       popper-class="sidebar-popper"
+      :style="moduleStyle(menu)"
     >
       <template #title>
         <el-icon :size="18"><component :is="iconComponent(menu.menuName)" /></el-icon>
         <span class="menu-title">{{ menu.menuName }}</span>
       </template>
-      <SidebarMenuItem :menus="menu.children" :parent-path="childParentPath(menu)" />
+      <SidebarMenuItem :menus="menu.children" :parent-path="childParentPath(menu)" :accent="accentFor(menu)" />
     </el-sub-menu>
     <el-menu-item
       v-else-if="menu.menuType === 'C' && menuRoute(menu)"
       :index="String(menu.id)"
       class="menu-item-child"
+      :style="{ '--mc': accentFor(menu).color, '--mc-rgb': accentFor(menu).rgb }"
     >
       <span class="menu-dot">•</span>
       <span>{{ menu.menuName }}</span>
@@ -76,12 +89,18 @@ function menuRoute(menu) {
   letter-spacing: 0.3px;
 }
 .menu-item-child {
-  padding-left: 56px !important;
-  font-size: 13px !important;
-  .menu-dot {
-    margin-right: 4px;
-    font-weight: bold;
-    color: #c0c4cc;
-  }
+  padding-left: 44px !important;
+  font-size: 12px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+}
+.menu-item-child .menu-dot {
+  margin-right: 4px;
+  font-weight: bold;
+  color: #5a6b80;
+  transition: color .2s;
+}
+.menu-item-child:hover .menu-dot {
+  color: var(--mc, #5a6b80);
 }
 </style>

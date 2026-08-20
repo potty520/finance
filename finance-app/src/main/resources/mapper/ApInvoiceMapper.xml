@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.payable.mapper.ApInvoiceMapper">
+
+    <select id="sumUnpaid" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(unpaid_amount), 0)
+        FROM ap_invoice
+        WHERE supplier_id = #{supplierId} AND deleted = 0
+    </select>
+
+    <select id="agingAnalysis" resultType="java.util.HashMap">
+        SELECT
+            CASE
+                WHEN DATEDIFF(CURDATE(), due_date) &lt;= 30 THEN '0-30天'
+                WHEN DATEDIFF(CURDATE(), due_date) &lt;= 60 THEN '31-60天'
+                WHEN DATEDIFF(CURDATE(), due_date) &lt;= 90 THEN '61-90天'
+                ELSE '90天以上'
+            END AS bucket,
+            COALESCE(SUM(unpaid_amount), 0) AS amount,
+            COUNT(*) AS count
+        FROM ap_invoice
+        WHERE supplier_id = #{supplierId} AND deleted = 0
+          AND unpaid_amount > 0
+        GROUP BY bucket
+        ORDER BY bucket
+    </select>
+
+</mapper>

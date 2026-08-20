@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.payable.mapper.ApPaymentMapper">
+
+    <select id="sumUnapplied" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount - IFNULL(settled_amount, 0)), 0)
+        FROM ap_payment
+        WHERE supplier_id = #{supplierId} AND deleted = 0
+    </select>
+
+    <select id="selectBySupplier" resultType="com.finance.module.payable.entity.ApPayment">
+        SELECT * FROM ap_payment
+        WHERE supplier_id = #{supplierId} AND deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>

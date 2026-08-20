@@ -9,6 +9,17 @@
       <el-table-column prop="dueDate" label="到期日" width="120" />
       <el-table-column label="状态" width="100"><template #default="{row}"><el-tag>{{ BILL_STATUS_MAP[row.status] || row.status }}</el-tag></template></el-table-column>
     </el-table>
+
+    <el-pagination
+      v-model:current-page="pager.pageNum"
+      v-model:page-size="pager.pageSize"
+      :total="data.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      :page-sizes="[10, 20, 50, 100]"
+      @current-change="loadData"
+      @size-change="loadData"
+      style="margin-top:16px; justify-content: flex-end;"
+    />
   </div>
 </template>
 
@@ -18,13 +29,15 @@ import request from '@/utils/request'
 import { BILL_TYPE_MAP, STATUS_MAP } from '@/constants/enums'
 
 const loading = ref(false)
-const data = reactive({ list: [] })
+const data = reactive({ list: [], total: 0 })
+const pager = reactive({ pageNum: 1, pageSize: 10 })
 
 const loadData = async () => {
   loading.value = true
   try {
-    const res = await request({ url: '/cashier/bill/page', method: 'get', params: { pageNum: 1, pageSize: 50 } })
-    data.list = res.data.records || []
+    const res = await request({ url: '/cashier/bill/page', method: 'get', params: { pageNum: pager.pageNum, pageSize: pager.pageSize } })
+    data.list = res.data.records
+    data.total = res.data.total || 0
   } finally { loading.value = false }
 }
 

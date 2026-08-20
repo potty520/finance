@@ -8,6 +8,7 @@ import com.finance.common.response.Result;
 import com.finance.common.response.ResultCode;
 import com.finance.common.util.CommonUtil;
 import com.finance.module.system.entity.SysUser;
+import com.finance.module.system.mapper.SysUserMapper;
 import com.finance.module.system.service.ISysUserService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,9 @@ public class SysUserController {
 
     @Resource
     private ISysUserService userService;
+
+    @Resource
+    private SysUserMapper userMapper;
 
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('system:user:list')")
@@ -52,6 +56,11 @@ public class SysUserController {
         SysUser u = userService.getById(id);
         if (u != null) u.setPassword(null);
         return Result.success(u);
+    }
+
+    @GetMapping("/{id}/roles")
+    public Result<List<Long>> roleIds(@PathVariable Long id) {
+        return Result.success(userMapper.selectRoleIdsByUserId(id));
     }
 
     @PostMapping

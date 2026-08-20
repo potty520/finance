@@ -6,8 +6,8 @@
         <div class="logo-icon">💰</div>
         <transition name="fade">
           <div v-if="!collapse" class="logo-text">
-            <div class="logo-title">铁壳财务</div>
-            <div class="logo-subtitle">Finance System</div>
+            <div class="logo-title">清账财务</div>
+            <div class="logo-subtitle">QingZhang Finance</div>
           </div>
         </transition>
       </div>
@@ -17,12 +17,11 @@
           :default-active="activeMenuId"
           :collapse="collapse"
           :collapse-transition="false"
-          background-color="#ffffff"
-          text-color="#555"
-          active-text-color="#409eff"
+          text-color="#b8c4d4"
+          active-text-color="#ffffff"
           @select="handleMenuSelect"
         >
-          <el-menu-item index="dashboard">
+          <el-menu-item index="dashboard" :style="{ '--mc': 'var(--mod-dashboard)', '--mc-rgb': 'var(--mod-dashboard-rgb)' }">
             <template #title>
               <el-icon :size="18"><HomeFilled /></el-icon>
               <span>工作台</span>
@@ -68,7 +67,7 @@
           <el-input
             v-model="searchKeyword"
             class="header-search"
-            placeholder="搜索客户/供应商/凭证号..."
+            placeholder="搜索凭证号..."
             :prefix-icon="Search"
             clearable
             size="small"
@@ -88,7 +87,7 @@
               </el-avatar>
               <div class="user-text">
                 <div class="user-name">{{ userStore.userInfo?.realName || userStore.userInfo?.username || '用户' }}</div>
-                <div class="user-role">管理员</div>
+                <div class="user-role">{{ userRoleText }}</div>
               </div>
               <el-icon class="user-arrow"><ArrowDown /></el-icon>
             </div>
@@ -142,7 +141,7 @@ const currentPeriod = computed(() => {
 })
 
 const navMenus = computed(() => userStore.menus || [])
-const noticeCount = ref(3)
+const noticeCount = ref(0)
 const activeMenuId = computed(() => {
   if (route.path === '/dashboard') return 'dashboard'
   return findActiveMenuId(navMenus.value, route.path, route.query.m) || 'dashboard'
@@ -159,28 +158,47 @@ const handleMenuSelect = (index) => {
 }
 
 const handleGlobalSearch = () => {
-  if (!searchKeyword.value.trim()) return
-  ElMessage.info(`搜索: ${searchKeyword.value}（功能开发中）`)
+  const kw = searchKeyword.value.trim()
+  if (!kw) return
+  router.push({ path: '/ledger/voucher-list', query: { keyword: kw } })
+  ElMessage.success(`已按凭证号搜索：${kw}`)
 }
 
 onMounted(async () => {
   if (!userStore.userInfo) {
     try { await userStore.loadInfo() } catch (e) {}
   }
+  // 拉取真实业务预警作为通知
+  try {
+    const { getAlerts } = await import('@/api/dashboard')
+    const res = await getAlerts()
+    noticeList.value = res?.data || []
+    noticeCount.value = noticeList.value.length
+  } catch (e) { /* 忽略 */ }
 })
 
-const notices = [
-  { title: '应收账款到期提醒', content: '客户A 50,000元将于2026-06-28到期', time: '2026-06-25 14:30' },
-  { title: '预算超支预警', content: '管理费用已超预算12%，请关注', time: '2026-06-25 10:15' },
-  { title: '库存预警', content: 'A物料当前库存23件，低于安全库存', time: '2026-06-24 16:00' }
-]
+const userRoleText = computed(() => {
+  const roles = userStore.userInfo?.roles
+  if (Array.isArray(roles) && roles.length) {
+    const names = roles.map(r => (typeof r === 'string' ? r : (r.roleName || r.roleCode || ''))).filter(Boolean)
+    if (names.length) return names.join(' / ')
+  }
+  if (typeof roles === 'string' && roles) return roles
+  return '系统用户'
+})
+
+const noticeList = ref([])
 const showNotices = () => {
   ElNotification.closeAll()
-  notices.forEach(n => {
+  if (!noticeList.value.length) {
+    ElNotification({ title: '暂无预警', message: '当前没有新的业务预警', type: 'success', duration: 3000 })
+    return
+  }
+  noticeList.value.forEach(n => {
     ElNotification({
       title: n.title,
-      message: `${n.content} (${n.time})`,
-      type: 'warning',
+      message: n.desc || '',
+      type: n.level === 'danger' ? 'error' : (n.level === 'warning' ? 'warning' : 'info'),
       duration: 5000
     })
   })
@@ -206,53 +224,53 @@ const handleCmd = async (cmd) => {
   background: var(--bg-page);
 }
 
-// ===== 侧边栏 =====
+// ===== 侧边栏（深藏青深色）=====
 .sidebar {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #fff;
-  border-right: 1px solid var(--border-base);
+  background: #1e293b;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
   transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  box-shadow: 1px 0 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 1px 0 10px rgba(0, 0, 0, 0.25);
 }
 
 .logo-area {
   display: flex;
   align-items: center;
-  padding: 16px 18px;
-  height: 68px;
+  padding: 10px 14px;
+  height: 52px;
   cursor: pointer;
-  border-bottom: 1px solid var(--border-base);
-  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 10px;
   transition: background 0.2s;
-  &:hover { background: #f5f7fa; }
+  &:hover { background: #263449; }
 }
 .logo-icon {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #409eff, #66b1ff);
-  border-radius: 10px;
-  font-size: 18px;
+  background: linear-gradient(135deg, #1f5eaa, #3a7bc4);
+  border-radius: 8px;
+  font-size: 16px;
 }
 .logo-text {
   overflow: hidden;
   white-space: nowrap;
 }
 .logo-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #eef2f7;
   line-height: 1.2;
 }
 .logo-subtitle {
-  font-size: 11px;
-  color: var(--text-secondary);
+  font-size: 10px;
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -268,16 +286,16 @@ const handleCmd = async (cmd) => {
 // 侧边栏底部
 .sidebar-footer {
   flex-shrink: 0;
-  padding: 12px 16px;
-  border-top: 1px solid var(--border-base);
-  background: #fafafa;
+  padding: 6px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: #182234;
 }
 .sidebar-footer-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text-secondary);
+  gap: 6px;
+  font-size: 11px;
+  color: #94a3b8;
 }
 
 // ===== 右侧主体 =====
@@ -347,7 +365,7 @@ const handleCmd = async (cmd) => {
   &:hover { background: #f5f7fa; }
 }
 .user-avatar {
-  background: linear-gradient(135deg, #409eff, #66b1ff);
+  background: linear-gradient(135deg, #1f5eaa, #3a7bc4);
   color: #fff;
   font-weight: 600;
 }
@@ -372,17 +390,19 @@ const handleCmd = async (cmd) => {
 // 菜单
 :deep(.el-menu) {
   border-right: none;
+  background: transparent;
   .el-menu-item {
-    margin: 2px 8px;
-    border-radius: 8px;
-    height: 44px;
-    line-height: 44px;
-    font-size: 14px;
+    margin: 1px 6px;
+    border-radius: 6px;
+    height: 36px;
+    line-height: 36px;
+    font-size: 13px;
     transition: all 0.2s;
-    &:hover { background: #ecf5ff !important; }
+    color: #b8c4d4;
+    &:hover { background: rgba(255,255,255,.08) !important; color: #ffffff !important; }
     &.is-active {
-      background: linear-gradient(135deg, #ecf5ff, #d9ecff) !important;
-      font-weight: 600;
+      background: rgba(var(--mc-rgb, var(--mod-dashboard-rgb)), .18) !important;
+      color: #ffffff !important;
       &::before {
         content: '';
         position: absolute;
@@ -390,26 +410,35 @@ const handleCmd = async (cmd) => {
         top: 50%;
         transform: translateY(-50%);
         width: 3px;
-        height: 20px;
-        background: var(--primary);
+        height: 16px;
+        background: var(--mc, var(--mod-dashboard));
         border-radius: 0 3px 3px 0;
       }
     }
   }
   .el-sub-menu {
-    margin: 2px 8px;
-    border-radius: 8px;
+    margin: 1px 6px;
+    border-radius: 6px;
     .el-sub-menu__title {
-      border-radius: 8px;
-      height: 44px;
-      line-height: 44px;
-      font-size: 14px;
-      &:hover { background: #ecf5ff !important; }
+      border-radius: 6px;
+      height: 36px;
+      line-height: 36px;
+      font-size: 13px;
+      color: #b8c4d4;
+      &:hover { background: rgba(255,255,255,.08) !important; color: #ffffff !important; }
+      .el-icon { color: var(--mc, #94a3b8); transition: color .2s; }
+      .el-sub-menu__icon-arrow { color: #94a3b8; }
     }
     &.is-active .el-sub-menu__title {
-      color: var(--primary) !important;
-      font-weight: 600;
+      color: #ffffff !important;
+      .el-icon { color: var(--mc, #94a3b8); }
     }
+  }
+  // 展开的子菜单最大高度限制 + 滚动
+  .el-sub-menu .el-menu {
+    max-height: 260px;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
 
@@ -434,5 +463,6 @@ const handleCmd = async (cmd) => {
 .main-content {
   padding: 20px;
   background: var(--bg-page);
+  overflow-y: auto;
 }
 </style>

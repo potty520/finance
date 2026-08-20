@@ -56,6 +56,37 @@ public class ReceivableController {
                         .orderByAsc(ArCustomer::getCustomerCode)));
     }
 
+    @PostMapping("/customer")
+    public Result<Boolean> addCustomer(@RequestBody ArCustomer customer) {
+        if (customer.getCustomerCode() == null || customer.getCustomerCode().isEmpty()
+                || customer.getCustomerName() == null || customer.getCustomerName().isEmpty()) {
+            return Result.error("客户编码与客户名称不能为空");
+        }
+        if (customer.getStatus() == null) customer.setStatus(1);
+        return Result.success(customerMapper.insert(customer) > 0);
+    }
+
+    @PutMapping("/customer")
+    public Result<Boolean> editCustomer(@RequestBody ArCustomer customer) {
+        if (customer.getId() == null) {
+            return Result.error("缺少客户ID");
+        }
+        return Result.success(customerMapper.updateById(customer) > 0);
+    }
+
+    @DeleteMapping("/customer/{id}")
+    public Result<Boolean> delCustomer(@PathVariable Long id) {
+        ArCustomer c = customerMapper.selectById(id);
+        if (c == null) return Result.success(true);
+        // 有应收发票的客户禁止删除
+        Long cnt = invoiceMapper.selectCount(new LambdaQueryWrapper<ArInvoice>()
+                .eq(ArInvoice::getCustomerId, id).eq(ArInvoice::getDeleted, 0));
+        if (cnt != null && cnt > 0) {
+            return Result.error("该客户存在应收发票记录，不可删除，可将其停用");
+        }
+        return Result.success(customerMapper.deleteById(id) > 0);
+    }
+
     // 发票
     @GetMapping("/invoice/page")
     public Result<PageResult<ArInvoice>> invoicePage(

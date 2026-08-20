@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.receivable.mapper.ArWriteoffMapper">
+
+    <select id="selectByReceipt" resultType="com.finance.module.receivable.entity.ArWriteoff">
+        SELECT * FROM ar_writeoff WHERE receipt_id = #{receiptId} ORDER BY create_time DESC
+    </select>
+
+    <select id="selectByInvoice" resultType="com.finance.module.receivable.entity.ArWriteoff">
+        SELECT * FROM ar_writeoff WHERE invoice_id = #{invoiceId} ORDER BY create_time DESC
+    </select>
+
+</mapper>

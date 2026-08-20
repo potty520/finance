@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.module.payable.mapper.ApWriteoffMapper">
+
+    <select id="selectByPayment" resultType="com.finance.module.payable.entity.ApWriteoff">
+        SELECT * FROM ap_writeoff WHERE payment_id = #{paymentId} ORDER BY create_time DESC
+    </select>
+
+    <select id="selectByInvoice" resultType="com.finance.module.payable.entity.ApWriteoff">
+        SELECT * FROM ap_writeoff WHERE invoice_id = #{invoiceId} ORDER BY create_time DESC
+    </select>
+
+</mapper>

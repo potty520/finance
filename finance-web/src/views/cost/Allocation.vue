@@ -23,6 +23,17 @@
       <el-table-column prop="remark" label="备注" />
     </el-table>
 
+    <el-pagination
+      v-model:current-page="pager.pageNum"
+      v-model:page-size="pager.pageSize"
+      :total="data.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      :page-sizes="[10, 20, 50, 100]"
+      @current-change="loadData"
+      @size-change="loadData"
+      style="margin-top:16px; justify-content: flex-end;"
+    />
+
     <el-dialog v-model="dialog.visible" :title="dialog.title" width="600px">
       <el-form :model="form" label-width="100px">
         <el-row :gutter="16">
@@ -51,7 +62,8 @@ import { Plus } from '@element-plus/icons-vue'
 import request from '@/utils/request'
 
 const loading = ref(false)
-const data = reactive({ list: [] })
+const data = reactive({ list: [], total: 0 })
+const pager = reactive({ pageNum: 1, pageSize: 10 })
 const query = reactive({ fiscalYear: new Date().getFullYear().toString(), fiscalPeriod: new Date().getMonth() + 1 })
 const dialog = reactive({ visible: false, title: '' })
 const form = reactive({ id: null, fiscalYear: '2026', fiscalPeriod: 1, allocationDate: '', sourceCenterName: '', targetCenterName: '', itemName: '', amount: 0, remark: '' })
@@ -59,8 +71,9 @@ const form = reactive({ id: null, fiscalYear: '2026', fiscalPeriod: 1, allocatio
 const loadData = async () => {
   loading.value = true
   try {
-    const res = await request({ url: '/cost/allocation/page', method: 'get', params: { ...query, pageNum: 1, pageSize: 50 } })
+    const res = await request({ url: '/cost/allocation/page', method: 'get', params: { ...query, pageNum: pager.pageNum, pageSize: pager.pageSize } })
     data.list = res.data.records
+    data.total = res.data.total || 0
   } finally { loading.value = false }
 }
 const onAdd = () => { Object.assign(form, { id: null, allocationDate: new Date().toISOString().substr(0, 10) }); dialog.visible = true; dialog.title = '新增' }

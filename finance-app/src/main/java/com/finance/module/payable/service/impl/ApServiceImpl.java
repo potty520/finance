@@ -54,7 +54,7 @@ public class ApServiceImpl implements IApService {
         if (StrUtil.isBlank(payment.getBillNo())) {
             payment.setBillNo(generateBillNo("AP-PM"));
         }
-        if (payment.getStatus() == null) payment.setStatus("DRAFT");
+        if (payment.getStatus() == null) payment.setStatus("D");
         if (payment.getAppliedAmount() == null) payment.setAppliedAmount(BigDecimal.ZERO);
         if (payment.getDeleted() == null) payment.setDeleted(0);
         if (payment.getPaymentType() == null) payment.setPaymentType("BANK");

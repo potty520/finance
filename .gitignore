@@ -24,6 +24,36 @@ test_report/
 
 # 测试报告
 *测试报告*.md
+screenshots/
+biz_results.json
+mvn_build.log
+
+# 传输/打包中间产物
+*.b64
+*.tar.gz
+*.zip
+*.zip.old
+*.jar.new
+
+# 本地调试与诊断脚本（含服务器凭据，勿入库）
+dbj_local/
+deploy_jar.py
+deploy_zip.py
+upload_parts.py
+ssh_helper.py
+ssh_tunnel.py
+server_cleanup.sh
+diag_*.py
+shot_*.py
+check_ui.py
+cleanup_*.py
+clean_residual.py
+color_check.py
+verify_*.py
+biz_test.py
+full_test.py
+gen_report.py
+gen_biz_report.py
 
 # OS
 .DS_Store

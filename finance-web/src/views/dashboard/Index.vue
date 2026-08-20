@@ -10,10 +10,10 @@
             </div>
           </div>
           <div class="stat-body">
-            <div class="stat-label">本月收入</div>
-            <div class="stat-value">¥1,256,890</div>
-            <div class="stat-change up">
-              <el-icon><CaretTop /></el-icon> 12.5% <span class="stat-vs">vs 上月</span>
+            <div class="stat-label">本月借方发生额</div>
+            <div class="stat-value">¥{{ fmtMoney(summary.monthDebit) }}</div>
+            <div class="stat-extra">
+              <el-tag type="primary" size="small" effect="plain">本月 {{ summary.monthVoucherCount }} 张凭证</el-tag>
             </div>
           </div>
         </div>
@@ -27,10 +27,10 @@
             </div>
           </div>
           <div class="stat-body">
-            <div class="stat-label">本月支出</div>
-            <div class="stat-value">¥856,420</div>
-            <div class="stat-change down">
-              <el-icon><CaretBottom /></el-icon> 4.8% <span class="stat-vs">vs 上月</span>
+            <div class="stat-label">本月贷方发生额</div>
+            <div class="stat-value">¥{{ fmtMoney(summary.monthCredit) }}</div>
+            <div class="stat-extra">
+              <el-tag type="success" size="small" effect="plain">累计 {{ summary.voucherTotal }} 张</el-tag>
             </div>
           </div>
         </div>
@@ -44,10 +44,10 @@
             </div>
           </div>
           <div class="stat-body">
-            <div class="stat-label">应收账款</div>
-            <div class="stat-value">¥432,150</div>
+            <div class="stat-label">应收未收</div>
+            <div class="stat-value">¥{{ fmtMoney(summary.arUncollected) }}</div>
             <div class="stat-extra">
-              <el-tag type="danger" size="small" effect="dark">3笔即将到期</el-tag>
+              <el-tag type="warning" size="small" effect="plain">{{ summary.customerCount }} 家客户</el-tag>
             </div>
           </div>
         </div>
@@ -61,10 +61,10 @@
             </div>
           </div>
           <div class="stat-body">
-            <div class="stat-label">应付账款</div>
-            <div class="stat-value">¥218,750</div>
+            <div class="stat-label">应付未付</div>
+            <div class="stat-value">¥{{ fmtMoney(summary.apUnpaid) }}</div>
             <div class="stat-extra">
-              <el-tag type="warning" size="small" effect="dark">5笔待支付</el-tag>
+              <el-tag type="danger" size="small" effect="plain">{{ summary.supplierCount }} 家供应商</el-tag>
             </div>
           </div>
         </div>
@@ -95,19 +95,19 @@
       <!-- 资金趋势图 -->
       <div class="trend-card">
         <div class="card-header">
-          <h3>月度收支趋势</h3>
+          <h3>月度借贷发生额趋势</h3>
           <div class="card-header-right">
-            <el-radio-group v-model="trendPeriod" size="small">
-              <el-radio-button value="6m">近6个月</el-radio-button>
-              <el-radio-button value="12m">近12个月</el-radio-button>
+            <el-radio-group v-model="trendPeriod" size="small" @change="loadTrend">
+              <el-radio-button value="6">近6个月</el-radio-button>
+              <el-radio-button value="12">近12个月</el-radio-button>
             </el-radio-group>
           </div>
         </div>
-        <v-chart :option="trendOption" autoresize style="height: 280px;" />
+        <v-chart :option="trendOption" autoresize style="height: 240px;" />
       </div>
     </div>
 
-    <!-- ===== 下排：预警 + 待办 + 最近凭证 ===== -->
+    <!-- ===== 下排：预警 + 最近凭证 + 待办 ===== -->
     <div class="dashboard-bottom">
       <!-- 预警 -->
       <div class="alert-card">
@@ -116,12 +116,13 @@
             <el-badge :value="alerts.length" class="alert-badge">业务预警</el-badge>
           </h3>
         </div>
-        <div class="alert-list">
+        <div class="alert-list" v-loading="loading">
+          <el-empty v-if="!loading && alerts.length === 0" description="暂无预警" :image-size="60" />
           <div class="alert-item" v-for="(item, idx) in alerts" :key="idx" :class="'alert-' + item.levelType">
             <div class="alert-dot" :class="'dot-' + item.levelType"></div>
             <div class="alert-content">
               <div class="alert-title">{{ item.title }}</div>
-              <div class="alert-time">{{ item.time }}</div>
+              <div class="alert-time">{{ item.desc }}</div>
             </div>
             <el-tag :type="tagType(item.levelType)" size="small" effect="plain">{{ item.level }}</el-tag>
           </div>
@@ -132,58 +133,56 @@
       <div class="voucher-card">
         <div class="card-header">
           <h3>最近凭证</h3>
-          <el-button link type="primary" @click="router.push('/ledger/voucher-list')">查看全部 →</el-button>
+          <el-button type="primary" size="small" text style="font-weight: 500;" @click="router.push('/ledger/voucher-list')">查看全部 →</el-button>
         </div>
-        <el-table :data="recentVouchers" stripe size="small">
-          <el-table-column prop="voucherNo" label="凭证号" width="130" />
-          <el-table-column prop="date" label="日期" width="100" />
-          <el-table-column prop="summary" label="摘要" min-width="160" show-overflow-tooltip />
-          <el-table-column prop="amount" label="金额" width="120" align="right">
+        <el-table :data="recentVouchers" stripe size="small" v-loading="loading">
+          <el-table-column prop="voucherNo" label="凭证号" width="140" />
+          <el-table-column prop="voucherDate" label="日期" width="100" />
+          <el-table-column prop="summary" label="摘要" min-width="140" show-overflow-tooltip />
+          <el-table-column label="借方金额" width="120" align="right">
             <template #default="{ row }">
-              <span class="amount">¥{{ row.amount }}</span>
+              <span class="amount">¥{{ fmtMoney(row.totalDebit) }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="status" label="状态" width="80" align="center">
+          <el-table-column label="状态" width="80" align="center">
             <template #default="{ row }">
-              <el-tag :type="row.status === '已审核' ? 'success' : 'info'" size="small">
-                {{ row.status }}
+              <el-tag :type="statusTag(row.status)" size="small">
+                {{ statusText(row.status) }}
               </el-tag>
             </template>
           </el-table-column>
         </el-table>
+        <el-empty v-if="!loading && recentVouchers.length === 0" description="暂无凭证数据" :image-size="60" />
       </div>
 
       <!-- 待办 -->
       <div class="todo-card">
         <div class="card-header">
-          <h3>我的待办</h3>
-          <el-tag type="warning" size="small" effect="dark" round>{{ todos.length }} 项</el-tag>
+          <h3>待办事项</h3>
+          <el-tag type="warning" size="small" effect="dark" round>{{ todoCount }} 项</el-tag>
         </div>
         <div class="todo-list">
-          <div class="todo-item" v-for="(item, idx) in todos" :key="idx">
+          <div class="todo-item" v-for="(item, idx) in todoItems" :key="idx" @click="router.push(item.path)">
             <div class="todo-left">
               <div class="todo-type-tag" :class="'type-' + item.tagType">{{ item.tag }}</div>
             </div>
             <div class="todo-center">
-              <div class="todo-biz">{{ item.bizNo }}</div>
-              <div class="todo-meta">
-                <span>{{ item.applicant }}</span>
-                <span class="todo-dot">·</span>
-                <span>{{ item.date }}</span>
-              </div>
+              <div class="todo-biz">{{ item.title }}</div>
+              <div class="todo-meta">{{ item.desc }}</div>
             </div>
             <div class="todo-right">
-              <span class="todo-amount">¥{{ item.amount }}</span>
+              <el-icon color="#c0c4cc"><ArrowRight /></el-icon>
             </div>
           </div>
         </div>
+        <el-empty v-if="!loading && todoItems.length === 0" description="没有待办事项" :image-size="60" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
@@ -193,19 +192,25 @@ import {
   TitleComponent, TooltipComponent, LegendComponent, GridComponent
 } from 'echarts/components'
 import {
-  TrendCharts, Money, Sell, ShoppingCart, CaretTop, CaretBottom,
+  TrendCharts, Money, Sell, ShoppingCart,
   EditPen, DocumentAdd, Upload, CreditCard,
   Wallet, Notebook, ArrowRight
 } from '@element-plus/icons-vue'
+import { getSummary, getTrend, getAlerts, getRecentVouchers } from '@/api/dashboard'
 
 use([CanvasRenderer, LineChart, BarChart, PieChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent])
 
 const router = useRouter()
-const trendPeriod = ref('6m')
+const loading = ref(false)
+const trendPeriod = ref('6')
+const summary = ref({ monthDebit: 0, monthCredit: 0, monthVoucherCount: 0, voucherTotal: 0, arUncollected: 0, apUnpaid: 0, customerCount: 0, supplierCount: 0, pendingVoucherCount: 0 })
+const trendData = ref([])
+const alerts = ref([])
+const recentVouchers = ref([])
 
 // 快捷操作
 const quickActions = [
-  { label: '录入凭证', desc: '记一笔', icon: EditPen, path: '/ledger/voucher', bg: 'linear-gradient(135deg, #409eff, #66b1ff)' },
+  { label: '录入凭证', desc: '记一笔', icon: EditPen, path: '/ledger/voucher?add=1', bg: 'linear-gradient(135deg, #1f5eaa, #3a7bc4)' },
   { label: '费用报销', desc: '提交报销单', icon: DocumentAdd, path: '/expense/apply', bg: 'linear-gradient(135deg, #67c23a, #95d475)' },
   { label: '收款单', desc: '登记收款', icon: Upload, path: '/receivable/receipt', bg: 'linear-gradient(135deg, #e6a23c, #ebb563)' },
   { label: '付款单', desc: '登记付款', icon: CreditCard, path: '/payable/payment', bg: 'linear-gradient(135deg, #f56c6c, #f89898)' },
@@ -215,15 +220,9 @@ const quickActions = [
 
 // 趋势图
 const trendOption = computed(() => {
-  const xData = trendPeriod.value === '6m'
-    ? ['1月', '2月', '3月', '4月', '5月', '6月']
-    : ['7月', '8月', '9月', '10月', '11月', '12月', '1月', '2月', '3月', '4月', '5月', '6月']
-  const incomeData = trendPeriod.value === '6m'
-    ? [800, 950, 1100, 1050, 1200, 1256]
-    : [780, 820, 900, 950, 880, 1020, 800, 950, 1100, 1050, 1200, 1256]
-  const expenseData = trendPeriod.value === '6m'
-    ? [600, 720, 850, 800, 900, 856]
-    : [580, 650, 720, 780, 750, 800, 600, 720, 850, 800, 900, 856]
+  const xData = trendData.value.map(t => t.ym || '')
+  const incomeData = trendData.value.map(t => t.credit || 0)
+  const expenseData = trendData.value.map(t => t.debit || 0)
 
   return {
     tooltip: {
@@ -236,7 +235,7 @@ const trendOption = computed(() => {
         params.forEach(p => {
           html += `<div style="display:flex;align-items:center;gap:8px;margin:4px 0;">
             <span style="width:10px;height:10px;border-radius:50%;background:${p.color};display:inline-block;"></span>
-            ${p.seriesName}: <b>¥${(p.value * 1000).toLocaleString()}</b>
+            ${p.seriesName}: <b>¥${Number(p.value || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2 })}</b>
           </div>`
         })
         return html
@@ -246,32 +245,33 @@ const trendOption = computed(() => {
       bottom: 0,
       textStyle: { color: '#666', fontSize: 12 }
     },
-    grid: { top: 10, left: 10, right: 20, bottom: 40 },
+    grid: { top: 10, left: 56, right: 20, bottom: 40 },
     xAxis: {
       type: 'category',
       data: xData,
       axisLine: { lineStyle: { color: '#e4e7ed' } },
       axisTick: { show: false },
-      axisLabel: { color: '#909399' }
+      axisLabel: { color: '#606266', fontSize: 12 }
     },
     yAxis: {
       type: 'value',
       splitLine: { lineStyle: { color: '#f2f3f5', type: 'dashed' } },
       axisLabel: {
-        color: '#909399',
+        color: '#606266',
+        fontSize: 12,
         formatter: (v) => '¥' + v + 'k'
       }
     },
     series: [
       {
-        name: '收入',
+        name: '贷方发生额',
         type: 'line',
         data: incomeData,
         smooth: true,
         symbol: 'circle',
         symbolSize: 6,
-        lineStyle: { color: '#409eff', width: 2.5 },
-        itemStyle: { color: '#409eff' },
+        lineStyle: { color: '#1f5eaa', width: 2.5 },
+        itemStyle: { color: '#1f5eaa' },
         areaStyle: {
           color: {
             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
@@ -283,7 +283,7 @@ const trendOption = computed(() => {
         }
       },
       {
-        name: '支出',
+        name: '借方发生额',
         type: 'line',
         data: expenseData,
         smooth: true,
@@ -305,58 +305,97 @@ const trendOption = computed(() => {
   }
 })
 
-// 预警
-const alerts = [
-  { title: '应收账款到期催收：客户A 50,000元', level: '高', levelType: 'high', time: '2026-06-28到期' },
-  { title: '预算超支预警：管理费用超预算12%', level: '中', levelType: 'mid', time: '本月累计' },
-  { title: '库存预警：A物料低于安全库存', level: '中', levelType: 'mid', time: '当前库存23件' },
-  { title: '固定资产折旧待计提', level: '低', levelType: 'low', time: '6月30日前' }
-]
+// 待办汇总（基于预警 + 待审凭证）
+const todoItems = computed(() => {
+  const items = []
+  const pending = Number(summary.value.pendingVoucherCount || 0)
+  if (pending > 0) {
+    items.push({ tag: '凭证', tagType: 'expense', title: `${pending} 张凭证待审核`, desc: '前往凭证管理处理', path: '/ledger/voucher-list' })
+  }
+  const arOverdue = alerts.value.filter(a => a.type === 'arOverdue').length
+  if (arOverdue > 0) {
+    items.push({ tag: '应收', tagType: 'pay', title: `${arOverdue} 笔应收逾期`, desc: '尽快催收账款', path: '/receivable/aging' })
+  }
+  const apDue = alerts.value.filter(a => a.type === 'apDue').length
+  if (apDue > 0) {
+    items.push({ tag: '应付', tagType: 'contract', title: `${apDue} 笔应付将到期`, desc: '安排资金付款', path: '/payable/aging' })
+  }
+  return items
+})
+const todoCount = computed(() => todoItems.value.length)
 
 const tagType = (t) => ({ high: 'danger', mid: 'warning', low: 'info' }[t])
 
-// 待办
-const todos = [
-  { bizNo: 'EX-1700000001', type: '费用申请', tag: '费用', tagType: 'expense', amount: '5,200.00', applicant: '张三', date: '2026-06-22 14:30' },
-  { bizNo: 'CT-1700000002', type: '合同审批', tag: '合同', tagType: 'contract', amount: '128,000.00', applicant: '李四', date: '2026-06-22 15:20' },
-  { bizNo: 'PJ-1700000003', type: '项目预算', tag: '项目', tagType: 'project', amount: '50,000.00', applicant: '王五', date: '2026-06-23 09:15' },
-  { bizNo: 'PY-1700000004', type: '付款审批', tag: '付款', tagType: 'pay', amount: '36,800.00', applicant: '赵六', date: '2026-06-24 11:00' }
-]
+const statusText = (s) => {
+  const map = { DRAFT: '草稿', D: '草稿', SUBMITTED: '待审核', APPROVING: '审核中', APPROVED: '已审核', A: '已审核', POSTED: '已过账', P: '已过账', REJECTED: '已驳回', R: '已驳回' }
+  return map[s] || s || '草稿'
+}
+const statusTag = (s) => {
+  const map = { DRAFT: 'info', D: 'info', SUBMITTED: 'warning', APPROVING: 'warning', APPROVED: 'success', A: 'success', POSTED: 'success', P: 'success', REJECTED: 'danger', R: 'danger' }
+  return map[s] || 'info'
+}
 
-// 最近凭证
-const recentVouchers = [
-  { voucherNo: '记-202606-001', date: '2026-06-25', summary: '收到客户A货款', amount: '50,000.00', status: '已审核' },
-  { voucherNo: '记-202606-002', date: '2026-06-24', summary: '支付供应商B材料款', amount: '28,500.00', status: '已审核' },
-  { voucherNo: '记-202606-003', date: '2026-06-24', summary: '计提本月折旧费用', amount: '12,300.00', status: '草稿' },
-  { voucherNo: '记-202606-004', date: '2026-06-23', summary: '销售商品确认收入', amount: '85,000.00', status: '已审核' }
-]
+const fmtMoney = (v) => {
+  const n = Number(v || 0)
+  return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+const loadTrend = async () => {
+  const res = await getTrend(Number(trendPeriod.value))
+  trendData.value = res?.data || []
+}
+
+const loadAll = async () => {
+  loading.value = true
+  try {
+    const [s, a, r, t] = await Promise.all([
+      getSummary(), getAlerts(), getRecentVouchers(8), getTrend(Number(trendPeriod.value))
+    ])
+    summary.value = s?.data || summary.value
+    alerts.value = (a?.data || []).map(x => ({
+      ...x,
+      levelType: x.level === 'danger' ? 'high' : (x.level === 'warning' ? 'mid' : 'low'),
+      level: x.level === 'danger' ? '高' : (x.level === 'warning' ? '中' : '低')
+    }))
+    recentVouchers.value = r?.data || []
+    trendData.value = t?.data || []
+  } catch (e) {
+    console.error(e)
+  } finally {
+    loading.value = false
+  }
+}
 
 const handleQuick = (path) => {
   if (path) router.push(path)
 }
+
+onMounted(loadAll)
 </script>
 
 <style scoped lang="scss">
 .dashboard {
   width: 100%;
+  min-height: 0;
 }
 
 // ===== 统计卡片 =====
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 20px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 .stat-card {
   background: #fff;
   border-radius: var(--radius-base);
-  padding: 20px 24px;
+  padding: 14px 18px;
   box-shadow: var(--shadow-card);
   transition: all var(--transition);
   cursor: pointer;
   overflow: hidden;
   position: relative;
+  min-width: 0;
   &::after {
     content: '';
     position: absolute;
@@ -371,24 +410,24 @@ const handleQuick = (path) => {
 }
 .stat-card-inner {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
 }
 .stat-icon-wrap {
   flex-shrink: 0;
 }
 .stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
 }
 .stat-income {
-  .stat-icon { background: linear-gradient(135deg, #409eff, #66b1ff); }
-  &::after { background: #409eff; }
+  .stat-icon { background: linear-gradient(135deg, #1f5eaa, #3a7bc4); }
+  &::after { background: #1f5eaa; }
 }
 .stat-expense {
   .stat-icon { background: linear-gradient(135deg, #67c23a, #95d475); }
@@ -403,20 +442,24 @@ const handleQuick = (path) => {
   &::after { background: #f56c6c; }
 }
 .stat-body { flex: 1; min-width: 0; }
-.stat-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
-.stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-.stat-change { font-size: 12px; display: flex; align-items: center; gap: 2px; }
-.stat-change.up { color: var(--success); }
-.stat-change.down { color: var(--danger); }
-.stat-vs { color: var(--text-secondary); margin-left: 4px; }
+.stat-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .stat-extra { margin-top: 2px; }
 
 // ===== 快捷操作 + 趋势 =====
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-bottom: 20px;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .quick-actions-card, .trend-card {
@@ -424,71 +467,76 @@ const handleQuick = (path) => {
   border-radius: var(--radius-base);
   box-shadow: var(--shadow-card);
   overflow: hidden;
+  min-width: 0;
 }
 
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-base);
   h3 {
     margin: 0;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 }
 .card-header-right { display: flex; align-items: center; }
 
 // 快捷操作
 .quick-actions {
-  padding: 8px;
+  padding: 6px;
 }
 .quick-action-item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
+  gap: 12px;
+  padding: 10px 14px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s;
+  min-width: 0;
   &:hover {
     background: #f5f7fa;
     .qa-arrow { opacity: 1; transform: translateX(0); }
   }
 }
 .qa-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   flex-shrink: 0;
 }
-.qa-info { flex: 1; }
-.qa-label { font-size: 14px; font-weight: 500; color: var(--text-primary); }
-.qa-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.qa-info { flex: 1; min-width: 0; overflow: hidden; }
+.qa-label { font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qa-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .qa-arrow {
   opacity: 0;
   transform: translateX(-8px);
   transition: all 0.2s;
   color: var(--text-placeholder);
   font-size: 14px;
+  flex-shrink: 0;
 }
 
 // 趋势图
 .trend-card {
-  padding-bottom: 8px;
+  padding-bottom: 6px;
 }
 
 // ===== 底部三栏 =====
 .dashboard-bottom {
   display: grid;
   grid-template-columns: 1fr 1.2fr 0.9fr;
-  gap: 20px;
+  gap: 16px;
 }
 
 .alert-card, .voucher-card, .todo-card {
@@ -496,18 +544,21 @@ const handleQuick = (path) => {
   border-radius: var(--radius-base);
   box-shadow: var(--shadow-card);
   overflow: hidden;
+  min-width: 0;
 }
 
 // 预警列表
 .alert-list {
-  padding: 8px 0;
+  padding: 6px 0;
+  min-height: 100px;
 }
 .alert-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
+  gap: 10px;
+  padding: 10px 16px;
   transition: background 0.2s;
+  min-width: 0;
   &:hover { background: #fafafa; }
 }
 .alert-dot {
@@ -519,55 +570,66 @@ const handleQuick = (path) => {
 .dot-high { background: var(--danger); box-shadow: 0 0 6px rgba(245,108,108,0.4); }
 .dot-mid { background: var(--warning); box-shadow: 0 0 6px rgba(230,162,60,0.4); }
 .dot-low { background: var(--info); }
-.alert-content { flex: 1; min-width: 0; }
-.alert-title { font-size: 13px; color: var(--text-primary); margin-bottom: 2px; }
-.alert-time { font-size: 11px; color: var(--text-secondary); }
+.alert-content { flex: 1; min-width: 0; overflow: hidden; }
+.alert-title { font-size: 13px; color: var(--text-primary); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.alert-time { font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .alert-badge :deep(.el-badge__content) { border: none; }
 
 // 最近凭证
 .voucher-card {
-  :deep(.el-table) { font-size: 13px; }
+  overflow-x: auto;
+  :deep(.el-table) { font-size: 13px; min-width: 480px; }
   .amount { font-weight: 500; color: var(--text-primary); font-variant-numeric: tabular-nums; }
 }
 
 // 待办列表
 .todo-list {
   padding: 4px 0;
+  min-height: 100px;
 }
 .todo-item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 20px;
+  gap: 12px;
+  padding: 10px 16px;
   transition: background 0.2s;
   cursor: pointer;
+  min-width: 0;
   &:hover { background: #fafafa; }
 }
 .todo-type-tag {
-  width: 44px;
-  height: 24px;
-  border-radius: 6px;
+  width: 40px;
+  height: 22px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 600;
   color: #fff;
+  flex-shrink: 0;
 }
-.type-expense { background: #409eff; }
+.type-expense { background: #1f5eaa; }
 .type-contract { background: #e6a23c; }
 .type-project { background: #7c3aed; }
 .type-pay { background: #f56c6c; }
-.todo-center { flex: 1; min-width: 0; }
-.todo-biz { font-size: 13px; font-weight: 500; color: var(--text-primary); }
-.todo-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-.todo-dot { margin: 0 4px; }
-.todo-amount { font-size: 14px; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+.todo-center { flex: 1; min-width: 0; overflow: hidden; }
+.todo-biz { font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.todo-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.todo-right { display: flex; align-items: center; flex-shrink: 0; }
 
 // 响应式
+@media (max-width: 1400px) {
+  .dashboard-bottom { grid-template-columns: 1fr 1fr; }
+  .todo-card { grid-column: 1 / -1; }
+}
 @media (max-width: 1200px) {
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .dashboard-grid { grid-template-columns: 1fr; }
   .dashboard-bottom { grid-template-columns: 1fr; }
+  .todo-card { grid-column: auto; }
+}
+@media (max-width: 768px) {
+  .stat-grid { grid-template-columns: 1fr; }
 }
 </style>

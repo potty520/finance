@@ -70,6 +70,17 @@
 
     </el-table>
 
+    <el-pagination
+      v-model:current-page="pager.pageNum"
+      v-model:page-size="pager.pageSize"
+      :total="data.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      :page-sizes="[10, 20, 50, 100]"
+      @current-change="loadData"
+      @size-change="loadData"
+      style="margin-top:16px; justify-content: flex-end;"
+    />
+
 
 
     <el-dialog v-model="dialog.visible" :title="dialog.title" width="700px" destroy-on-close>
@@ -263,7 +274,8 @@ const CONTRACT_TYPE = 'BUY'
 
 const loading = ref(false)
 
-const data = reactive({ list: [] })
+const data = reactive({ list: [], total: 0 })
+const pager = reactive({ pageNum: 1, pageSize: 10 })
 
 const dialog = reactive({ visible: false, title: '新增采购合同' })
 
@@ -349,11 +361,12 @@ const loadData = async () => {
 
       method: 'get',
 
-      params: { contractType: CONTRACT_TYPE, pageNum: 1, pageSize: 50 }
+      params: { contractType: CONTRACT_TYPE, pageNum: pager.pageNum, pageSize: pager.pageSize }
 
     })
 
-    data.list = res.data.records || []
+    data.list = res.data.records
+    data.total = res.data.total || 0
 
   } finally {
 

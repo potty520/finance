@@ -37,11 +37,22 @@
       </el-table-column>
     </el-table>
 
+    <el-pagination
+      v-model:current-page="pager.pageNum"
+      v-model:page-size="pager.pageSize"
+      :total="data.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      :page-sizes="[10, 20, 50, 100]"
+      @current-change="loadData"
+      @size-change="loadData"
+      style="margin-top:16px; justify-content: flex-end;"
+    />
+
     <el-dialog v-model="dialog.visible" :title="dialog.title" width="700px">
-      <el-form :model="form" label-width="100px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="物料编码"><el-input v-model="form.goodsCode" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="物料名称"><el-input v-model="form.goodsName" /></el-form-item></el-col>
+          <el-col :span="12"><el-form-item label="物料编码" prop="goodsCode"><el-input v-model="form.goodsCode" /></el-form-item></el-col>
+          <el-col :span="12"><el-form-item label="物料名称" prop="goodsName"><el-input v-model="form.goodsName" /></el-form-item></el-col>
           <el-col :span="12"><el-form-item label="类别"><el-input v-model="form.categoryName" /></el-form-item></el-col>
           <el-col :span="12"><el-form-item label="规格"><el-input v-model="form.spec" /></el-form-item></el-col>
           <el-col :span="12"><el-form-item label="单位"><el-input v-model="form.unit" /></el-form-item></el-col>
@@ -73,21 +84,30 @@ import request from '@/utils/request'
 import { STATUS_MAP } from '@/constants/enums'
 
 const loading = ref(false)
-const data = reactive({ list: [] })
+const formRef = ref()
+const data = reactive({ list: [], total: 0 })
+const pager = reactive({ pageNum: 1, pageSize: 10 })
 const query = reactive({ keyword: '', categoryCode: '' })
 const dialog = reactive({ visible: false, title: '' })
 const form = reactive({ id: null, goodsCode: '', goodsName: '', categoryName: '', spec: '', unit: '', pricingMethod: '1', subjectCode: '', salesSubjectCode: '', status: 1 })
 
+const rules = {
+  goodsCode: [{ required: true, message: '请输入物料编码', trigger: 'blur' }],
+  goodsName: [{ required: true, message: '请输入物料名称', trigger: 'blur' }]
+}
+
 const loadData = async () => {
   loading.value = true
   try {
-    const res = await request({ url: '/stock/goods/page', method: 'get', params: { ...query, pageNum: 1, pageSize: 50 } })
+    const res = await request({ url: '/stock/goods/page', method: 'get', params: { ...query, pageNum: pager.pageNum, pageSize: pager.pageSize } })
     data.list = res.data.records
+    data.total = res.data.total || 0
   } finally { loading.value = false }
 }
 const onAdd = () => { Object.assign(form, { id: null, goodsCode: 'GD-' + Date.now() }); dialog.visible = true; dialog.title = '新增' }
 const onEdit = (row) => { Object.assign(form, row); dialog.visible = true; dialog.title = '编辑' }
 const onSave = async () => {
+  await formRef.value.validate()
   if (form.id) await request({ url: '/stock/goods', method: 'put', data: form })
   else await request({ url: '/stock/goods', method: 'post', data: form })
   ElMessage.success('保存成功'); dialog.visible = false; loadData()

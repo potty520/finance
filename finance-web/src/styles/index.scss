@@ -4,14 +4,15 @@
 
 // CSS 变量
 :root {
-  --primary: #409eff;
-  --primary-light: #66b1ff;
-  --primary-dark: #3a8ee6;
+  // 品牌主色：商务藏青
+  --primary: #1f5eaa;
+  --primary-light: #3a7bc4;
+  --primary-dark: #17497f;
   --success: #67c23a;
   --warning: #e6a23c;
   --danger: #f56c6c;
   --info: #909399;
-  --bg-page: #f0f2f5;
+  --bg-page: #f2f4f7;
   --bg-card: #ffffff;
   --text-primary: #303133;
   --text-regular: #606266;
@@ -24,6 +25,35 @@
   --radius-base: 8px;
   --radius-sm: 6px;
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  // ===== Element Plus 主题色覆盖（商务藏青）=====
+  --el-color-primary: #1f5eaa;
+  --el-color-primary-light-3: #5b8dc8;
+  --el-color-primary-light-5: #8fb3d9;
+  --el-color-primary-light-7: #c2d6ec;
+  --el-color-primary-light-8: #d8e4f2;
+  --el-color-primary-light-9: #edf3fa;
+  --el-color-primary-dark-2: #17497f;
+
+  // ===== 业务模块功能色（按模块分区标识）=====
+  // 账务/报表/税务：蓝
+  --mod-ledger: #2563eb;   --mod-ledger-rgb: 37, 99, 235;
+  // 出纳/费用：青
+  --mod-cashier: #0d9488;  --mod-cashier-rgb: 13, 148, 136;
+  // 应收：绿
+  --mod-receivable: #16a34a; --mod-receivable-rgb: 22, 163, 74;
+  // 应付/采购合同：琥珀
+  --mod-payable: #d97706;  --mod-payable-rgb: 217, 119, 6;
+  // 资产/存货：紫
+  --mod-asset: #7c3aed;    --mod-asset-rgb: 124, 58, 237;
+  // 预算/成本/项目：玫红
+  --mod-budget: #db2777;   --mod-budget-rgb: 219, 39, 119;
+  // 合并报表/审批流：靛蓝
+  --mod-consol: #6366f1;   --mod-consol-rgb: 99, 102, 241;
+  // 系统管理：灰蓝
+  --mod-system: #64748b;   --mod-system-rgb: 100, 116, 139;
+  // 工作台：主色
+  --mod-dashboard: #1f5eaa; --mod-dashboard-rgb: 31, 94, 170;
 }
 
 html, body, #app {

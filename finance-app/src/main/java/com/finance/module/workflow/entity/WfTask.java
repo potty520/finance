@@ -28,36 +28,25 @@ public class WfTask implements Serializable {
     private LocalDateTime submitTime;
     private LocalDateTime approveTime;
 
-    @TableField(exist = false)
     private Long instanceId;
 
-    @TableField(exist = false)
     private String flowCode;
 
-    @TableField(exist = false)
     private String businessType;
 
-    @TableField(exist = false)
     private String businessNo;
 
-    @TableField(exist = false)
     private Long businessId;
 
-    @TableField(exist = false)
     private Integer level;
 
-    @TableField(exist = false)
     private String nodeName;
 
-    @TableField(exist = false)
     private Long assignee;
 
-    @TableField(exist = false)
     private String assigneeName;
 
-    @TableField(exist = false)
     private LocalDateTime createTime;
 
-    @TableField(exist = false)
     private LocalDateTime handleTime;
 }

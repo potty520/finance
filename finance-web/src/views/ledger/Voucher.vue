@@ -455,7 +455,18 @@ const confirmPrint = () => {
   }
 }
 
-onMounted(loadData)
+onMounted(() => {
+  loadData()
+  // 全局搜索跳转：接收 keyword 参数并作为凭证号模糊搜索
+  if (route.query.keyword) {
+    search.voucherNo = route.query.keyword
+    loadData()
+  }
+  // 凭证录入入口：自动打开新增凭证弹窗
+  if (route.name === 'Voucher') {
+    onAdd()
+  }
+})
 
 watch(
   () => [form.fiscalYear, form.fiscalPeriod, form.id],
@@ -535,16 +546,16 @@ watch(
 .add-entry-btn {
   margin-top: 12px;
   width: 100%;
-  border: 1px dashed #91caff;
-  background: #f0f7ff;
-  color: #0958d9;
+  border: 1px dashed #8fb3d9;
+  background: #edf3fa;
+  color: #1f5eaa;
   font-weight: 500;
 
   &:hover,
   &:focus {
-    color: #0958d9;
-    border-color: #409eff;
-    background: #e6f4ff;
+    color: #1f5eaa;
+    border-color: #1f5eaa;
+    background: #edf3fa;
   }
 }
 

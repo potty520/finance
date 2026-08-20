@@ -27,7 +27,7 @@ const routes = [
       { path: 'receivable/customer', name: 'ARCustomer', component: () => import('@/views/receivable/Customer.vue'), meta: { title: '客户档案' } },
       { path: 'receivable/invoice', name: 'ARInvoice', component: () => import('@/views/receivable/Invoice.vue'), meta: { title: '销售发票' } },
       { path: 'receivable/receipt', name: 'ARReceipt', component: () => import('@/views/receivable/Receipt.vue'), meta: { title: '收款单' } },
-      { path: 'receivable/writeoff', name: 'ARWriteoff', component: () => import('@/views/receivable/Invoice.vue'), meta: { title: '核销管理' } },
+      { path: 'receivable/writeoff', name: 'ARWriteoff', component: () => import('@/views/receivable/Writeoff.vue'), meta: { title: '核销管理' } },
       { path: 'receivable/bill', name: 'ARBill', component: () => import('@/views/receivable/Bill.vue'), meta: { title: '应收票据' } },
       { path: 'receivable/aging', name: 'ARAging', component: () => import('@/views/receivable/Aging.vue'), meta: { title: '账龄分析' } },
       // 应付
@@ -35,7 +35,7 @@ const routes = [
       { path: 'payable/supplier', name: 'APSupplier', component: () => import('@/views/payable/Supplier.vue'), meta: { title: '供应商档案' } },
       { path: 'payable/invoice', name: 'APInvoice', component: () => import('@/views/payable/Invoice.vue'), meta: { title: '采购发票' } },
       { path: 'payable/payment', name: 'APPayment', component: () => import('@/views/payable/Payment.vue'), meta: { title: '付款单' } },
-      { path: 'payable/writeoff', name: 'APWriteoff', component: () => import('@/views/payable/Invoice.vue'), meta: { title: '核销管理' } },
+      { path: 'payable/writeoff', name: 'APWriteoff', component: () => import('@/views/payable/Writeoff.vue'), meta: { title: '核销管理' } },
       { path: 'payable/bill', name: 'APBill', component: () => import('@/views/payable/Bill.vue'), meta: { title: '应付票据' } },
       { path: 'payable/aging', name: 'APAging', component: () => import('@/views/payable/Aging.vue'), meta: { title: '账龄分析' } },
       // 资产

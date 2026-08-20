@@ -35,6 +35,11 @@ mvn_build.log
 *.zip.old
 *.jar.new
 
+# 可交付发布包
+!release/
+!release/*.jar
+!release/*.zip
+
 # 本地调试与诊断脚本（含服务器凭据，勿入库）
 dbj_local/
 deploy_jar.py

@@ -114,7 +114,7 @@ const onExportExcel = async () => {
   try {
     const token = localStorage.getItem('token')
     const resp = await fetch(`/api/tax/vat/draft/excel?fiscalYear=${query.fiscalYear}&fiscalPeriod=${query.fiscalPeriod}`, {
-      headers: { 'Authorization': '***' + token }
+      headers: { 'Authorization': 'Bearer ' + token }
     })
     const blob = await resp.blob()
     const url = URL.createObjectURL(blob)

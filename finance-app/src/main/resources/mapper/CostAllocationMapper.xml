@@ -5,14 +5,17 @@
 
     <select id="sumByCenter" resultType="map">
         SELECT
-            from_center_id AS centerId,
+            COALESCE(source_center_code, source_center_name) AS centerId,
+            COALESCE(source_center_name, source_center_code) AS centerName,
             SUM(amount) AS totalAmount,
             COUNT(*) AS allocationCount
         FROM cost_allocation
         WHERE deleted = 0
-          AND period_code = CONCAT(#{year}, LPAD(#{period}, 2, '0'))
-        GROUP BY from_center_id
-        ORDER BY from_center_id
+          AND fiscal_year = #{year}
+          AND fiscal_period = #{period}
+        GROUP BY COALESCE(source_center_code, source_center_name),
+                 COALESCE(source_center_name, source_center_code)
+        ORDER BY centerId
     </select>
 
 </mapper>

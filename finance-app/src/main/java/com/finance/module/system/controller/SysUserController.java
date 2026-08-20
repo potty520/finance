@@ -11,6 +11,8 @@ import com.finance.module.system.entity.SysUser;
 import com.finance.module.system.mapper.SysUserMapper;
 import com.finance.module.system.service.ISysUserService;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -43,6 +45,7 @@ public class SysUserController {
     }
 
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('system:user:list')")
     public Result<List<SysUser>> list() {
         List<SysUser> list = userService.list(new LambdaQueryWrapper<SysUser>()
                 .eq(SysUser::getStatus, 1)
@@ -52,6 +55,7 @@ public class SysUserController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('system:user:list')")
     public Result<SysUser> get(@PathVariable Long id) {
         SysUser u = userService.getById(id);
         if (u != null) u.setPassword(null);
@@ -59,6 +63,7 @@ public class SysUserController {
     }
 
     @GetMapping("/{id}/roles")
+    @PreAuthorize("hasAuthority('system:user:list')")
     public Result<List<Long>> roleIds(@PathVariable Long id) {
         return Result.success(userMapper.selectRoleIdsByUserId(id));
     }
@@ -117,9 +122,14 @@ public class SysUserController {
 
     @PostMapping("/changePwd")
     public Result<Boolean> changePwd(@RequestBody Map<String, Object> body) {
-        Long id = Long.valueOf(body.get("userId").toString());
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || "anonymousUser".equals(auth.getName())) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED);
+        }
+        SysUser current = userMapper.selectByUsername(auth.getName());
+        if (current == null) throw new BusinessException(ResultCode.UNAUTHORIZED);
         String oldPwd = body.get("oldPassword").toString();
         String newPwd = body.get("newPassword").toString();
-        return Result.success(userService.changePassword(id, oldPwd, newPwd));
+        return Result.success(userService.changePassword(current.getId(), oldPwd, newPwd));
     }
 }

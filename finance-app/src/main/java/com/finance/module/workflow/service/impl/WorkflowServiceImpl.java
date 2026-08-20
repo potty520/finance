@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class WorkflowServiceImpl implements IWorkflowService {
@@ -77,6 +78,7 @@ public class WorkflowServiceImpl implements IWorkflowService {
     public boolean approve(Long taskId, Long userId, String userName, String opinion) {
         WfTask t = taskMapper.selectById(taskId);
         if (t == null) throw new BusinessException(ResultCode.DATA_NOT_FOUND);
+        assertAssignee(t, userId);
         if (!"0".equals(t.getStatus())) throw new BusinessException("该任务已处理");
         t.setStatus("1");
         t.setOpinion(opinion);
@@ -104,6 +106,7 @@ public class WorkflowServiceImpl implements IWorkflowService {
     public boolean reject(Long taskId, Long userId, String userName, String opinion) {
         WfTask t = taskMapper.selectById(taskId);
         if (t == null) throw new BusinessException(ResultCode.DATA_NOT_FOUND);
+        assertAssignee(t, userId);
         if (!"0".equals(t.getStatus())) throw new BusinessException("该任务已处理");
         t.setStatus("2");
         t.setOpinion(opinion);
@@ -123,6 +126,7 @@ public class WorkflowServiceImpl implements IWorkflowService {
     public boolean transfer(Long taskId, Long fromUserId, String fromUserName, Long toUserId, String toUserName, String opinion) {
         WfTask t = taskMapper.selectById(taskId);
         if (t == null) throw new BusinessException(ResultCode.DATA_NOT_FOUND);
+        assertAssignee(t, fromUserId);
         if (!"0".equals(t.getStatus())) throw new BusinessException("该任务已处理");
         t.setStatus("3");
         t.setOpinion(opinion);
@@ -167,5 +171,12 @@ public class WorkflowServiceImpl implements IWorkflowService {
         map.put("instance", inst);
         map.put("tasks", tasks);
         return map;
+    }
+
+    private void assertAssignee(WfTask task, Long userId) {
+        if (userId == null || (!Objects.equals(task.getAssignee(), userId)
+                && !Objects.equals(task.getApproverId(), userId))) {
+            throw new BusinessException(ResultCode.FORBIDDEN);
+        }
     }
 }

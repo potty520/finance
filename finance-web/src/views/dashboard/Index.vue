@@ -103,7 +103,10 @@
             </el-radio-group>
           </div>
         </div>
-        <v-chart :option="trendOption" autoresize style="height: 240px;" />
+        <div v-if="!loading && trendData.length === 0" class="trend-empty">
+          <el-empty description="暂无趋势数据" :image-size="64" />
+        </div>
+        <v-chart v-else :option="trendOption" autoresize style="height: 240px;" />
       </div>
     </div>
 
@@ -531,6 +534,12 @@ onMounted(loadAll)
 .trend-card {
   padding-bottom: 6px;
 }
+.trend-empty {
+  height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 // ===== 底部三栏 =====
 .dashboard-bottom {
@@ -630,6 +639,45 @@ onMounted(loadAll)
   .todo-card { grid-column: auto; }
 }
 @media (max-width: 768px) {
-  .stat-grid { grid-template-columns: 1fr; }
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .stat-card {
+    padding: 12px;
+  }
+  .stat-card-inner {
+    gap: 8px;
+  }
+  .stat-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+  .stat-value {
+    font-size: 17px;
+  }
+  .stat-extra :deep(.el-tag) {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .dashboard-grid,
+  .dashboard-bottom {
+    gap: 10px;
+  }
+  .card-header {
+    padding: 11px 12px;
+  }
+  .quick-action-item,
+  .alert-item,
+  .todo-item {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .voucher-card {
+    overflow-x: auto;
+  }
 }
 </style>

@@ -159,12 +159,23 @@ a {
     box-shadow: var(--shadow-hover) !important;
   }
 }
-.el-button--primary {
+.el-button--primary:not(.is-text):not(.is-link) {
   background-color: var(--primary) !important;
   border-color: var(--primary) !important;
   &:hover {
     background-color: var(--primary-light) !important;
     border-color: var(--primary-light) !important;
+  }
+}
+.el-button--primary.is-text,
+.el-button--primary.is-link {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--primary) !important;
+  &:hover {
+    background: var(--el-color-primary-light-9) !important;
+    border-color: transparent !important;
+    color: var(--primary-light) !important;
   }
 }
 .el-table {

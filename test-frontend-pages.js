@@ -64,7 +64,7 @@ function buildApiProbeUrl(apiPath) {
     params.set('pageSize', '5')
   }
   if (apiPath.includes('/myTasks')) params.set('userId', '1')
-  if (apiPath.includes('/analysis') || apiPath.includes('/summary') || apiPath.includes('/product/')) {
+  if (apiPath.includes('/analysis') || apiPath.includes('/summary') || apiPath.includes('/product/') || apiPath.includes('/tax/vat/')) {
     params.set('fiscalYear', '2026')
     params.set('fiscalPeriod', '6')
   }
@@ -148,7 +148,9 @@ const COMPONENT_ROUTE_MAP = {
   'report/bs/index': '/report/balance',
   'report/is/index': '/report/income',
   'report/cf/index': '/report/cashflow',
-  'report/custom/index': '/report/custom'
+  'report/custom/index': '/report/custom',
+  'report/Custom': '/report/custom',
+  'tax/Vat': '/tax/vat'
 }
 
 function resolveMenuRoute(menu) {

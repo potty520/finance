@@ -63,6 +63,10 @@ else
     exit 1
 fi
 
+# Nginx usually runs as www-data; normalize static file permissions after copying.
+find "$APP_DIR/frontend" -type d -exec chmod 755 {} +
+find "$APP_DIR/frontend" -type f -exec chmod 644 {} +
+
 if [ -f "$SCRIPT_DIR/00-full-database.sql" ]; then
     cp "$SCRIPT_DIR/00-full-database.sql" "$APP_DIR/sql/"
 elif [ -f "$SCRIPT_DIR/../sql/00-full-database.sql" ]; then
@@ -161,10 +165,14 @@ server {
     # API 反向代理
     location /api/ {
         proxy_pass http://127.0.0.1:18080/api/;
+        proxy_http_version 1.0;
+        proxy_set_header Connection "";
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering on;
+        chunked_transfer_encoding off;
         client_max_body_size 50m;
     }
 

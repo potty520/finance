@@ -1,8 +1,17 @@
 <template>
   <el-container class="layout-container">
+    <div
+      v-if="isMobile && mobileMenuOpen"
+      class="mobile-backdrop"
+      aria-hidden="true"
+      @click="closeMobileMenu"
+    />
     <!-- ===== 侧边栏 ===== -->
-    <el-aside :width="collapse ? '64px' : '220px'" class="sidebar">
-      <div class="logo-area" @click="collapse = !collapse">
+    <el-aside
+      :width="isMobile ? '220px' : (collapse ? '64px' : '220px')"
+      :class="['sidebar', { 'mobile-open': mobileMenuOpen }]"
+    >
+      <div class="logo-area" @click="toggleNavigation">
         <div class="logo-icon">💰</div>
         <transition name="fade">
           <div v-if="!collapse" class="logo-text">
@@ -45,8 +54,9 @@
       <!-- 顶部导航 -->
       <el-header class="header" height="56px">
         <div class="header-left">
-          <el-icon class="collapse-btn" :size="20" @click="collapse = !collapse">
-            <Fold v-if="!collapse" />
+          <el-icon class="collapse-btn" :size="20" @click="toggleNavigation">
+            <Menu v-if="isMobile" />
+            <Fold v-else-if="!collapse" />
             <Expand v-else />
           </el-icon>
           <el-breadcrumb separator="">
@@ -118,11 +128,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage, ElNotification } from 'element-plus'
 import {
-  HomeFilled, Fold, Expand, Search, Bell, Clock,
+  HomeFilled, Fold, Expand, Menu, Search, Bell, Clock,
   ArrowDown, UserFilled, SwitchButton
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
@@ -134,6 +144,8 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const collapse = ref(false)
+const isMobile = ref(false)
+const mobileMenuOpen = ref(false)
 const searchKeyword = ref('')
 const currentPeriod = computed(() => {
   const now = new Date()
@@ -150,11 +162,32 @@ const activeMenuId = computed(() => {
 const handleMenuSelect = (index) => {
   if (index === 'dashboard') {
     router.push('/dashboard')
+    closeMobileMenu()
     return
   }
   if (String(index).startsWith('group-')) return
   const loc = buildMenuLocation(navMenus.value, index)
-  if (loc) router.push(loc)
+  if (loc) {
+    router.push(loc)
+    closeMobileMenu()
+  }
+}
+
+const updateViewport = () => {
+  isMobile.value = window.matchMedia('(max-width: 768px)').matches
+  if (!isMobile.value) mobileMenuOpen.value = false
+}
+
+const toggleNavigation = () => {
+  if (isMobile.value) {
+    mobileMenuOpen.value = !mobileMenuOpen.value
+  } else {
+    collapse.value = !collapse.value
+  }
+}
+
+const closeMobileMenu = () => {
+  if (isMobile.value) mobileMenuOpen.value = false
 }
 
 const handleGlobalSearch = () => {
@@ -165,6 +198,8 @@ const handleGlobalSearch = () => {
 }
 
 onMounted(async () => {
+  updateViewport()
+  window.addEventListener('resize', updateViewport)
   if (!userStore.userInfo) {
     try { await userStore.loadInfo() } catch (e) {}
   }
@@ -175,6 +210,10 @@ onMounted(async () => {
     noticeList.value = res?.data || []
     noticeCount.value = noticeList.value.length
   } catch (e) { /* 忽略 */ }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateViewport)
 })
 
 const userRoleText = computed(() => {
@@ -222,6 +261,7 @@ const handleCmd = async (cmd) => {
 .layout-container {
   height: 100vh;
   background: var(--bg-page);
+  min-width: 0;
 }
 
 // ===== 侧边栏（深藏青深色）=====
@@ -234,6 +274,10 @@ const handleCmd = async (cmd) => {
   transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   box-shadow: 1px 0 10px rgba(0, 0, 0, 0.25);
+  z-index: 30;
+}
+.mobile-backdrop {
+  display: none;
 }
 
 .logo-area {
@@ -299,7 +343,10 @@ const handleCmd = async (cmd) => {
 }
 
 // ===== 右侧主体 =====
-.main-container { background: var(--bg-page); }
+.main-container {
+  background: var(--bg-page);
+  min-width: 0;
+}
 
 // 顶部
 .header {
@@ -327,6 +374,7 @@ const handleCmd = async (cmd) => {
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
 }
 
 // 搜索
@@ -464,5 +512,50 @@ const handleCmd = async (cmd) => {
   padding: 20px;
   background: var(--bg-page);
   overflow-y: auto;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 220px !important;
+    transform: translateX(-100%);
+    transition: transform 0.24s ease;
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .mobile-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: rgba(15, 23, 42, 0.42);
+  }
+  .header {
+    padding: 0 12px;
+  }
+  .header-left {
+    gap: 8px;
+    min-width: 0;
+  }
+  .header-left :deep(.el-breadcrumb__item:first-child) {
+    display: none;
+  }
+  .header-right {
+    gap: 6px;
+  }
+  .header-search,
+  .user-text,
+  .user-arrow {
+    display: none;
+  }
+  .user-info {
+    padding-right: 0;
+  }
+  .main-content {
+    padding: 12px;
+  }
 }
 </style>

@@ -137,8 +137,12 @@ server {
 
     location /api/ {
         proxy_pass http://127.0.0.1:18080/api/;
+        proxy_http_version 1.0;
+        proxy_set_header Connection "";
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_buffering on;
+        chunked_transfer_encoding off;
         client_max_body_size 50m;
     }
 
@@ -199,6 +203,8 @@ cp finance-app.jar /opt/qingzhang/jar/
 # 4. 替换前端
 rm -rf /opt/qingzhang/frontend/*
 cp -r dist/* /opt/qingzhang/frontend/
+find /opt/qingzhang/frontend -type d -exec chmod 755 {} +
+find /opt/qingzhang/frontend -type f -exec chmod 644 {} +
 
 # 5. 启动
 systemctl start qingzhang-api

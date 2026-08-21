@@ -39,7 +39,7 @@ public class TaxController {
         // 销项税额 = 22210105 贷方发生额 (优先) 或 222101 贷方发生额 (兜底)
         String sqlOutput = "SELECT COALESCE(SUM(e.amount), 0) " +
             "FROM gl_voucher_entry e JOIN gl_voucher v ON e.voucher_id = v.id " +
-            "WHERE v.period_code = ? AND v.deleted = 0 " +
+            "WHERE v.period_code = ? AND v.deleted = 0 AND v.status IN ('POSTED', 'P') " +
             "AND ((e.subject_code = '22210105' AND e.dc_direction = 'CREDIT') " +
             "  OR (e.subject_code = '222101' AND e.dc_direction = 'CREDIT' AND NOT EXISTS " +
             "    (SELECT 1 FROM gl_account_subject s WHERE s.subject_code = '22210105')))";
@@ -47,7 +47,7 @@ public class TaxController {
         // 进项税额 = 22210101 借方发生额 (优先) 或 222101 借方发生额 (兜底)
         String sqlInput = "SELECT COALESCE(SUM(e.amount), 0) " +
             "FROM gl_voucher_entry e JOIN gl_voucher v ON e.voucher_id = v.id " +
-            "WHERE v.period_code = ? AND v.deleted = 0 " +
+            "WHERE v.period_code = ? AND v.deleted = 0 AND v.status IN ('POSTED', 'P') " +
             "AND ((e.subject_code = '22210101' AND e.dc_direction = 'DEBIT') " +
             "  OR (e.subject_code = '222101' AND e.dc_direction = 'DEBIT' AND NOT EXISTS " +
             "    (SELECT 1 FROM gl_account_subject s WHERE s.subject_code = '22210101')))";

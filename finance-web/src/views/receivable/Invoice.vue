@@ -20,7 +20,7 @@
       <el-table-column prop="totalAmount" label="价税合计" align="right" />
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
-          <el-tag>{{ { '0': '未核销', '1': '已核销' }[row.status] }}</el-tag>
+          <el-tag :type="statusTag(row.status)">{{ statusText(row.status) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="160">
@@ -65,7 +65,6 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import request from '@/utils/request'
-import { STATUS_MAP } from '@/constants/enums'
 
 const loading = ref(false)
 const data = reactive({ list: [], total: 0 })
@@ -73,6 +72,25 @@ const pager = reactive({ pageNum: 1, pageSize: 10 })
 const query = reactive({ invoiceNo: '', customerName: '' })
 const dialog = reactive({ visible: false, title: '' })
 const form = reactive({ id: null, invoiceNo: '', customerName: '', invoiceDate: '', amount: 0, taxRate: 13, taxAmount: 0, remark: '', status: '0' })
+
+const statusText = (status) => ({
+  DRAFT: '草稿', D: '草稿',
+  PENDING: '待审核', APPROVING: '审核中',
+  APPROVED: '已审核', A: '已审核',
+  POSTED: '已过账', P: '已过账',
+  CLOSED: '已结清', C: '已结清',
+  VOIDED: '已作废', R: '已作废',
+  '0': '未核销', '1': '已核销', '2': '已结清'
+}[status] || status || '草稿')
+const statusTag = (status) => ({
+  DRAFT: 'info', D: 'info',
+  PENDING: 'warning', APPROVING: 'warning',
+  APPROVED: 'success', A: 'success',
+  POSTED: 'success', P: 'success',
+  CLOSED: 'success', C: 'success',
+  VOIDED: 'danger', R: 'danger',
+  '0': 'warning', '1': 'success', '2': 'success'
+}[status] || 'info')
 
 const loadData = async () => {
   loading.value = true

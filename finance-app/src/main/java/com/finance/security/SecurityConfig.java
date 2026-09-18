@@ -3,6 +3,7 @@ package com.finance.security;
 import com.finance.common.response.Result;
 import com.finance.common.response.ResultCode;
 import com.alibaba.fastjson2.JSON;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -28,6 +29,10 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
+    /** 接口文档开关：生产环境置 false，文档路径不再匿名放行 */
+    @Value("${knife4j.enable:false}")
+    private boolean apiDocEnabled;
+
     public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
     }
@@ -39,15 +44,28 @@ public class SecurityConfig {
             "/auth/login",
             "/auth/captcha",
             "/auth/logout",
-            "/debug/encode",
+            "/error",
+            "/favicon.ico"
+    };
+
+    /** 仅在开启接口文档时才匿名放行的路径 */
+    private static final String[] DOC_WHITE_LIST = {
             "/doc.html",
             "/webjars/**",
             "/swagger-resources/**",
             "/v2/api-docs/**",
-            "/v3/api-docs/**",
-            "/error",
-            "/favicon.ico"
+            "/v3/api-docs/**"
     };
+
+    private String[] effectiveWhiteList() {
+        if (!apiDocEnabled) {
+            return WHITE_LIST;
+        }
+        String[] all = new String[WHITE_LIST.length + DOC_WHITE_LIST.length];
+        System.arraycopy(WHITE_LIST, 0, all, 0, WHITE_LIST.length);
+        System.arraycopy(DOC_WHITE_LIST, 0, all, WHITE_LIST.length, DOC_WHITE_LIST.length);
+        return all;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -59,7 +77,7 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .antMatchers(WHITE_LIST).permitAll()
+                .antMatchers(effectiveWhiteList()).permitAll()
                 // 所有写操作必须具备对应模块的写权限，不能只依赖前端菜单隐藏。
                 .antMatchers(HttpMethod.POST, "/asset/**").hasAnyAuthority(
                         "fa:asset:add", "fa:asset:edit", "fa:category:add", "fa:category:edit",
@@ -163,13 +181,14 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling()
+                // 未认证返回标准 401，响应体仍为统一 JSON 结构
                 .authenticationEntryPoint((req, resp, e) -> {
-                    resp.setStatus(200);
+                    resp.setStatus(401);
                     resp.setContentType("application/json;charset=UTF-8");
                     resp.getWriter().write(JSON.toJSONString(Result.error(ResultCode.UNAUTHORIZED)));
                 })
                 .accessDeniedHandler((req, resp, e) -> {
-                    resp.setStatus(200);
+                    resp.setStatus(403);
                     resp.setContentType("application/json;charset=UTF-8");
                     resp.getWriter().write(JSON.toJSONString(Result.error(ResultCode.FORBIDDEN)));
                 })
@@ -185,7 +204,7 @@ public class SecurityConfig {
         config.addAllowedOriginPattern("*");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
-        config.setAllowCredentials(true);
+        config.setAllowCredentials(false);
         config.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

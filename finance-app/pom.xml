@@ -23,11 +23,13 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mybatis-plus.version>3.5.5</mybatis-plus.version>
-        <hutool.version>5.8.25</hutool.version>
-        <fastjson.version>2.0.43</fastjson.version>
+        <hutool.version>5.8.32</hutool.version>
+        <fastjson.version>2.0.53</fastjson.version>
         <knife4j.version>4.4.0</knife4j.version>
         <jjwt.version>0.11.5</jjwt.version>
         <druid.version>1.2.20</druid.version>
+        <!-- 覆盖 Spring Boot 2.7.18 自带 Spring Framework，修复已知 CVE -->
+        <spring-framework.version>5.3.39</spring-framework.version>
     </properties>
 
     <dependencies>
@@ -67,13 +69,6 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.33</version>
-            <scope>runtime</scope>
-        </dependency>
-
-        <!-- H2 Database (本地开发) -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
 

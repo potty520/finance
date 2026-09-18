@@ -63,3 +63,12 @@ gen_biz_report.py
 # OS
 .DS_Store
 Thumbs.db
+
+# 文档原始截图素材（已内嵌进 docx，不入库）
+docs/full-assets/
+# 本地诊断/复现脚本
+draft-tax-repro.mjs
+finance-business-test-*.mjs
+# 前端锁文件与本地工作区配置（不入库）
+finance-web/pnpm-lock.yaml
+finance-web/pnpm-workspace.yaml

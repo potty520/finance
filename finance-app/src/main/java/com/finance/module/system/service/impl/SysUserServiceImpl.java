@@ -10,6 +10,7 @@ import com.finance.common.exception.BusinessException;
 import com.finance.common.response.PageResult;
 import com.finance.common.response.ResultCode;
 import com.finance.common.util.CommonUtil;
+import com.finance.common.service.CurrentUserResolver;
 import com.finance.common.util.MenuTreeUtil;
 import com.finance.module.system.entity.SysMenu;
 import com.finance.module.system.entity.SysUser;
@@ -39,18 +40,37 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Resource
     private PasswordEncoder passwordEncoder;
 
+    @Resource
+    private CurrentUserResolver currentUser;
+
+    /** 登录失败限流：key -> [失败次数, 锁定截止时间戳ms] */
+    private static final java.util.concurrent.ConcurrentMap<String, long[]> LOGIN_FAILS = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final int MAX_LOGIN_FAILS = 5;
+    private static final long LOCK_MILLIS = 5 * 60 * 1000L;
+
     @Override
     public Map<String, Object> login(String username, String password) {
+        String failKey = username + "|" + clientIpSafe();
+        long now = System.currentTimeMillis();
+        long[] rec = LOGIN_FAILS.get(failKey);
+        if (rec != null && rec[0] >= MAX_LOGIN_FAILS && now < rec[1]) {
+            long left = (rec[1] - now) / 1000;
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(),
+                    "失败次数过多，账号已临时锁定，请 " + Math.max(left, 1) + " 秒后再试");
+        }
         SysUser user = baseMapper.selectByUsername(username);
         if (user == null) {
+            recordLoginFail(failKey, now);
             throw new BusinessException(ResultCode.BAD_REQUEST, "用户名或密码错误");
         }
         if (!passwordEncoder.matches(password, user.getPassword())) {
+            recordLoginFail(failKey, now);
             throw new BusinessException(ResultCode.BAD_REQUEST, "用户名或密码错误");
         }
         if (user.getStatus() == null || user.getStatus() != 1) {
             throw new BusinessException(ResultCode.USER_DISABLED);
         }
+        LOGIN_FAILS.remove(failKey);
         // 查询角色与权限
         List<String> roles = baseMapper.selectRoleCodesByUserId(user.getId());
         List<String> perms = baseMapper.selectPermCodesByUserId(user.getId());
@@ -147,17 +167,47 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
         boolean ok = updateById(user);
         if (ok && roleIds != null) {
-            // 简化：实际应通过专门的 UserRoleMapper 处理
+            saveUserRoles(user.getId(), roleIds);
         }
         return ok;
     }
 
     private void saveUserRoles(Long userId, List<Long> roleIds) {
-        // 简化：实际应通过专门的 UserRoleMapper 处理
+        baseMapper.deleteUserRoles(userId);
+        if (roleIds != null) {
+            for (Long roleId : roleIds) {
+                if (roleId != null) baseMapper.insertUserRole(userId, roleId);
+            }
+        }
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    public boolean deleteUser(Long userId) {
+        if (userId == null) throw new BusinessException("缺少用户ID");
+        SysUser target = getById(userId);
+        if (target == null) return true;
+        if (userId.equals(currentUser.currentId())) {
+            throw new BusinessException("不能删除当前登录用户");
+        }
+        if ("admin".equals(target.getUsername())) {
+            throw new BusinessException("系统内置管理员不可删除，如需停用请编辑其状态");
+        }
+        List<String> roles = baseMapper.selectRoleCodesByUserId(userId);
+        boolean isAdmin = roles != null && roles.stream().anyMatch(r -> "ADMIN".equalsIgnoreCase(r));
+        if (isAdmin) {
+            Long active = baseMapper.countActiveAdmins();
+            if (active != null && active <= 1) {
+                throw new BusinessException("系统至少保留一名启用状态的管理员");
+            }
+        }
+        baseMapper.deleteUserRoles(userId);
+        return removeById(userId);
     }
 
     @Override
     public boolean resetPassword(Long userId, String newPassword) {
+        validatePasswordStrength(newPassword);
         SysUser user = new SysUser();
         user.setId(userId);
         user.setPassword(passwordEncoder.encode(newPassword));
@@ -175,13 +225,36 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (StrUtil.isBlank(ip) || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
+        // 只信任 nginx 写入的 X-Real-IP，避免客户端伪造 X-Forwarded-For
+        String ip = request.getHeader("X-Real-IP");
         if (StrUtil.isBlank(ip) || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getRemoteAddr();
         }
         return ip;
+    }
+
+    private String clientIpSafe() {
+        HttpServletRequest req = CommonUtil.getCurrentRequest();
+        return req == null ? "-" : getClientIp(req);
+    }
+
+    private void recordLoginFail(String key, long now) {
+        LOGIN_FAILS.compute(key, (k, v) -> {
+            if (v == null || now >= v[1]) {
+                return new long[]{1, now + LOCK_MILLIS};
+            }
+            v[0] += 1;
+            v[1] = now + LOCK_MILLIS;
+            return v;
+        });
+    }
+
+    /** 密码复杂度：至少 8 位，且同时包含字母和数字 */
+    private void validatePasswordStrength(String pwd) {
+        if (pwd == null || pwd.length() < 8
+                || !pwd.matches(".*[A-Za-z].*") || !pwd.matches(".*\\d.*")) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(),
+                    "密码强度不足：至少 8 位且同时包含字母和数字");
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.finance.module.expense.service.impl;
 
 import com.finance.common.exception.BusinessException;
 import com.finance.common.response.ResultCode;
+import com.finance.common.service.CurrentUserResolver;
 import com.finance.module.expense.entity.ExpenseApply;
 import com.finance.module.expense.entity.ExpenseLoan;
 import com.finance.module.expense.mapper.ExpenseApplyMapper;
@@ -23,11 +24,24 @@ public class ExpenseServiceImpl implements IExpenseService {
     @Resource private ExpenseApplyMapper applyMapper;
     @Resource private ExpenseLoanMapper loanMapper;
     @Resource private IWorkflowService wfService;
+    @Resource private CurrentUserResolver currentUser;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ExpenseApply apply(ExpenseApply apply) {
-        if (apply.getBillNo() == null) apply.setBillNo("EX-" + System.currentTimeMillis());
+        if (apply.getAmount() == null || apply.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("报销金额必须大于 0");
+        }
+        if (apply.getBillNo() == null || apply.getBillNo().trim().isEmpty()) {
+            // 时间戳 + 随机后缀，避免同毫秒并发撞号
+            apply.setBillNo("EX-" + System.currentTimeMillis() + "-"
+                    + java.util.concurrent.ThreadLocalRandom.current().nextInt(1000, 9999));
+        }
+        if (apply.getApplicant() == null) {
+            // 申请人以登录用户为准，避免前端伪造他人报销
+            apply.setApplicant(currentUser.currentId());
+            apply.setApplicantName(currentUser.currentName());
+        }
         apply.setStatus("0");
         apply.setCreateTime(LocalDateTime.now());
         applyMapper.insert(apply);
@@ -40,6 +54,9 @@ public class ExpenseServiceImpl implements IExpenseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean repayLoan(Long loanId, BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("还款金额必须大于 0");
+        }
         ExpenseLoan loan = loanMapper.selectById(loanId);
         if (loan == null) throw new BusinessException(ResultCode.DATA_NOT_FOUND);
         BigDecimal repaid = loan.getRepaidAmount() == null ? BigDecimal.ZERO : loan.getRepaidAmount();
@@ -51,6 +68,19 @@ public class ExpenseServiceImpl implements IExpenseService {
             loan.setStatus("3");
         }
         return loanMapper.updateById(loan) > 0;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean markPaid(Long applyId) {
+        ExpenseApply a = applyMapper.selectById(applyId);
+        if (a == null) throw new BusinessException(ResultCode.DATA_NOT_FOUND);
+        if (!"1".equals(a.getStatus())) {
+            throw new BusinessException("仅审批通过的报销单可标记为已付款");
+        }
+        a.setStatus("3");
+        a.setUpdateTime(LocalDateTime.now());
+        return applyMapper.updateById(a) > 0;
     }
 
     @Override

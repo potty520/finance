@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -80,8 +81,7 @@ public class SysUserController {
         user.setGender(body.get("gender") != null ? ((Number) body.get("gender")).intValue() : null);
         user.setDeptId(body.get("deptId") != null ? ((Number) body.get("deptId")).longValue() : null);
         user.setStatus(body.get("status") != null ? ((Number) body.get("status")).intValue() : null);
-        @SuppressWarnings("unchecked")
-        List<Long> roleIds = (List<Long>) body.get("roleIds");
+        List<Long> roleIds = toLongList(body.get("roleIds"));
         return Result.success(userService.saveUser(user, roleIds));
     }
 
@@ -98,18 +98,15 @@ public class SysUserController {
         user.setGender(body.get("gender") != null ? ((Number) body.get("gender")).intValue() : null);
         user.setDeptId(body.get("deptId") != null ? ((Number) body.get("deptId")).longValue() : null);
         user.setStatus(body.get("status") != null ? ((Number) body.get("status")).intValue() : null);
-        @SuppressWarnings("unchecked")
-        List<Long> roleIds = (List<Long>) body.get("roleIds");
+        List<Long> roleIds = toLongList(body.get("roleIds"));
         return Result.success(userService.updateUser(user, roleIds));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('system:user:delete')")
     public Result<Boolean> delete(@PathVariable Long id) {
-        if (id != null && id == 1L) {
-            throw new BusinessException("系统管理员不可删除");
-        }
-        return Result.success(userService.removeById(id));
+        // 自身、内置管理员、最后一名启用管理员的删除保护在 service 层统一处理
+        return Result.success(userService.deleteUser(id));
     }
 
     @PostMapping("/resetPwd")
@@ -131,5 +128,28 @@ public class SysUserController {
         String oldPwd = body.get("oldPassword").toString();
         String newPwd = body.get("newPassword").toString();
         return Result.success(userService.changePassword(current.getId(), oldPwd, newPwd));
+    }
+    /**
+     * JSON 反序列化后集合元素可能是 Integer/String，直接强转 List<Long> 会在取值时抛
+     * ClassCastException，这里统一做安全转换。
+     */
+    private List<Long> toLongList(Object raw) {
+        if (!(raw instanceof List)) return null;
+        List<Long> out = new ArrayList<>();
+        for (Object o : (List<?>) raw) {
+            if (o == null) continue;
+            if (o instanceof Number) {
+                out.add(((Number) o).longValue());
+                continue;
+            }
+            String t = o.toString().trim();
+            if (t.isEmpty()) continue;
+            try {
+                out.add(Long.parseLong(t));
+            } catch (NumberFormatException ignore) {
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "角色ID格式不正确：" + t);
+            }
+        }
+        return out;
     }
 }

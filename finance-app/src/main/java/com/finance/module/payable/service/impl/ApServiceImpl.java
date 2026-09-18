@@ -3,6 +3,7 @@ package com.finance.module.payable.service.impl;
 import cn.hutool.core.util.StrUtil;
 import com.finance.common.exception.BusinessException;
 import com.finance.common.response.ResultCode;
+import com.finance.common.service.CurrentUserResolver;
 import com.finance.module.payable.entity.ApInvoice;
 import com.finance.module.payable.entity.ApPayment;
 import com.finance.module.payable.entity.ApWriteoff;
@@ -25,6 +26,7 @@ public class ApServiceImpl implements IApService {
     @Resource private ApInvoiceMapper invoiceMapper;
     @Resource private ApPaymentMapper paymentMapper;
     @Resource private ApWriteoffMapper writeoffMapper;
+    @Resource private CurrentUserResolver currentUser;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -79,6 +81,12 @@ public class ApServiceImpl implements IApService {
         ApPayment p = paymentMapper.selectById(paymentId);
         ApInvoice i = invoiceMapper.selectById(invoiceId);
         if (p == null || i == null) throw new BusinessException(ResultCode.DATA_NOT_FOUND);
+        if (!"A".equals(p.getStatus()) && !"C".equals(p.getStatus())) {
+            throw new BusinessException("付款单未审核，不能核销");
+        }
+        if (!"A".equals(i.getStatus())) {
+            throw new BusinessException("发票未审核，不能核销");
+        }
         BigDecimal unapplied = unappliedAmount(p);
         if (unapplied.compareTo(amount) < 0) {
             throw new BusinessException("付款单可用余额不足");
@@ -93,8 +101,8 @@ public class ApServiceImpl implements IApService {
         w.setInvoiceNo(i.getBillNo());
         w.setWriteoffAmount(amount);
         w.setRemark(remark);
-        w.setOperator(1L);
-        w.setOperatorName("系统用户");
+        w.setOperator(currentUser.currentId());
+        w.setOperatorName(currentUser.currentName());
         w.setCreateTime(LocalDateTime.now());
         writeoffMapper.insert(w);
         p.setAppliedAmount((p.getAppliedAmount() == null ? BigDecimal.ZERO : p.getAppliedAmount()).add(amount));
@@ -134,7 +142,9 @@ public class ApServiceImpl implements IApService {
     }
 
     private String generateBillNo(String prefix) {
-        return prefix + "-" + System.currentTimeMillis();
+        // 时间戳 + 随机后缀，避免同毫秒并发撞号
+        return prefix + "-" + System.currentTimeMillis() + "-"
+                + java.util.concurrent.ThreadLocalRandom.current().nextInt(1000, 9999);
     }
 
     private BigDecimal unappliedAmount(ApPayment payment) {

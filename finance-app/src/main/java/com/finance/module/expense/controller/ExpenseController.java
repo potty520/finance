@@ -9,6 +9,7 @@ import com.finance.module.expense.entity.ExpenseApply;
 import com.finance.module.expense.entity.ExpenseLoan;
 import com.finance.module.expense.mapper.ExpenseApplyMapper;
 import com.finance.module.expense.mapper.ExpenseLoanMapper;
+import com.finance.module.ledger.service.BizVoucherService;
 import com.finance.module.expense.service.IExpenseService;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +22,7 @@ import java.util.Map;
 public class ExpenseController {
 
     @Resource private IExpenseService expenseService;
+    @Resource private BizVoucherService bizVoucherService;
     @Resource private ExpenseApplyMapper applyMapper;
     @Resource private ExpenseLoanMapper loanMapper;
 
@@ -40,6 +42,18 @@ public class ExpenseController {
         Page<ExpenseApply> p = applyMapper.selectPage(
                 new Page<>(CommonUtil.safePageNum(pageNum), CommonUtil.safePageSize(pageSize)), qw);
         return Result.success(CommonUtil.toPageResult(p));
+    }
+
+    /** 报销单标记为已付款（须先审批通过） */
+    @PostMapping("/apply/pay/{id}")
+    public Result<Boolean> pay(@PathVariable Long id) {
+        return Result.success(expenseService.markPaid(id));
+    }
+
+    /** 业财一体：费用报销单生成记账凭证 */
+    @PostMapping("/apply/{id}/voucher")
+    public Result<Long> applyVoucher(@PathVariable Long id) {
+        return Result.success(bizVoucherService.fromExpense(id));
     }
 
     @GetMapping("/apply/analysis")

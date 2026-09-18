@@ -38,6 +38,9 @@ public class ArInvoice implements Serializable {
     private String remark;
     /** 状态：D-草稿 A-已审核 C-已关闭 */
     private String status;
+    /** 业财一体：由本单生成的记账凭证 */
+    private Long voucherId;
+    private String voucherNo;
     private Long creator;
     private String creatorName;
     private LocalDateTime createTime;

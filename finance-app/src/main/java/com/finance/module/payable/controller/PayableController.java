@@ -12,6 +12,7 @@ import com.finance.module.payable.entity.ApWriteoff;
 import com.finance.module.payable.mapper.ApInvoiceMapper;
 import com.finance.module.payable.mapper.ApPaymentMapper;
 import com.finance.module.payable.mapper.ApSupplierMapper;
+import com.finance.module.ledger.service.BizVoucherService;
 import com.finance.module.payable.service.IApService;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ import java.util.Map;
 public class PayableController {
 
     @Resource private IApService apService;
+    @Resource private BizVoucherService bizVoucherService;
     @Resource private ApSupplierMapper supplierMapper;
     @Resource private ApInvoiceMapper invoiceMapper;
     @Resource private ApPaymentMapper paymentMapper;
@@ -129,6 +131,12 @@ public class PayableController {
         return Result.success(apService.auditInvoice(id));
     }
 
+    /** 业财一体：采购发票生成记账凭证 */
+    @PostMapping("/invoice/{id}/voucher")
+    public Result<Long> invoiceVoucher(@PathVariable Long id) {
+        return Result.success(bizVoucherService.fromApInvoice(id));
+    }
+
     @GetMapping("/payment/page")
     public Result<PageResult<ApPayment>> paymentPage(
             @RequestParam(required = false) Long pageNum,
@@ -162,6 +170,12 @@ public class PayableController {
     @PostMapping("/payment/audit/{id}")
     public Result<Boolean> auditPayment(@PathVariable Long id) {
         return Result.success(apService.auditPayment(id));
+    }
+
+    /** 业财一体：付款单生成记账凭证 */
+    @PostMapping("/payment/{id}/voucher")
+    public Result<Long> paymentVoucher(@PathVariable Long id) {
+        return Result.success(bizVoucherService.fromApPayment(id));
     }
 
     @PostMapping("/writeoff")

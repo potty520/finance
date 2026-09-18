@@ -36,6 +36,9 @@ public class ApInvoice implements Serializable {
     private String purchaseOrderNo;
     private String remark;
     private String status;
+    /** 业财一体：由本单生成的记账凭证 */
+    private Long voucherId;
+    private String voucherNo;
     private Long creator;
     private String creatorName;
     private LocalDateTime createTime;

@@ -11,9 +11,9 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://103.236.96.82:13306/finance_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: remote
-    password: ToCAt69Aidc16I1KvkQo2YWMlUl01U0o
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/finance_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:finance}
+    password: ${DB_PASSWORD:}
     druid:
       initial-size: 5
       min-idle: 5
@@ -39,7 +39,8 @@ mybatis-plus:
   type-aliases-package: com.finance.module.*.entity
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # SQL 日志默认关闭，避免生产环境泄露业务数据；排查问题时可设为 StdOutImpl
+    log-impl: ${MYBATIS_LOG_IMPL:org.apache.ibatis.logging.nologging.NoLoggingImpl}
   global-config:
     db-config:
       id-type: auto
@@ -50,7 +51,8 @@ mybatis-plus:
 
 # JWT 配置
 jwt:
-  secret: finance-app-jwt-secret-key-2026-please-replace-in-production
+  # 生产环境必须通过 JWT_SECRET 注入，长度不少于 32 字节
+  secret: ${JWT_SECRET:local-dev-only-secret-key-please-override-in-production}
   expire: 86400  # 单位：秒，24小时
   header: Authorization
   prefix: "Bearer "
@@ -63,14 +65,17 @@ file:
 # 日志配置
 logging:
   level:
-    com.finance: debug
+    # 默认 info；本地排查可用 LOG_LEVEL=debug 覆盖
+    com.finance: ${LOG_LEVEL:info}
     com.baomidou.mybatisplus: warn
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
 
 # Knife4j
 knife4j:
-  enable: true
+  # 生产环境务必置为 false，否则接口文档可被匿名访问
+  enable: ${KNIFE4J_ENABLE:false}
+  production: ${KNIFE4J_PRODUCTION:true}
   setting:
     language: zh_cn
     enable-version: false

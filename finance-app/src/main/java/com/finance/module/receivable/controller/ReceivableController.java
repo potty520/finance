@@ -13,6 +13,7 @@ import com.finance.module.receivable.mapper.ArCustomerMapper;
 import com.finance.module.receivable.mapper.ArInvoiceMapper;
 import com.finance.module.receivable.mapper.ArReceiptMapper;
 import com.finance.module.receivable.mapper.ArWriteoffMapper;
+import com.finance.module.ledger.service.BizVoucherService;
 import com.finance.module.receivable.service.IArService;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +27,7 @@ import java.util.Map;
 public class ReceivableController {
 
     @Resource private IArService arService;
+    @Resource private BizVoucherService bizVoucherService;
     @Resource private ArCustomerMapper customerMapper;
     @Resource private ArInvoiceMapper invoiceMapper;
     @Resource private ArReceiptMapper receiptMapper;
@@ -134,6 +136,12 @@ public class ReceivableController {
         return Result.success(arService.auditInvoice(id));
     }
 
+    /** 业财一体：销售发票生成记账凭证 */
+    @PostMapping("/invoice/{id}/voucher")
+    public Result<Long> invoiceVoucher(@PathVariable Long id) {
+        return Result.success(bizVoucherService.fromArInvoice(id));
+    }
+
     // 收款
     @GetMapping("/receipt/page")
     public Result<PageResult<ArReceipt>> receiptPage(
@@ -168,6 +176,12 @@ public class ReceivableController {
     @PostMapping("/receipt/audit/{id}")
     public Result<Boolean> auditReceipt(@PathVariable Long id) {
         return Result.success(arService.auditReceipt(id));
+    }
+
+    /** 业财一体：收款单生成记账凭证 */
+    @PostMapping("/receipt/{id}/voucher")
+    public Result<Long> receiptVoucher(@PathVariable Long id) {
+        return Result.success(bizVoucherService.fromArReceipt(id));
     }
 
     // 核销

@@ -41,6 +41,8 @@ public class ApPayment implements Serializable {
 
     private Long voucherId;
 
+    private String voucherNo;
+
     private String status;
 
     private String remark;

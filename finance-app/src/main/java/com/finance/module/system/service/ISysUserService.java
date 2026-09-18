@@ -44,6 +44,11 @@ public interface ISysUserService extends IService<SysUser> {
     boolean updateUser(SysUser user, List<Long> roleIds);
 
     /**
+     * 删除用户（带自身/内置管理员/最后一名管理员保护）
+     */
+    boolean deleteUser(Long userId);
+
+    /**
      * 重置密码
      */
     boolean resetPassword(Long userId, String newPassword);

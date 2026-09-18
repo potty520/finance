@@ -126,8 +126,9 @@ public class JwtUtil {
     }
 
     /**
-     * 清理过期 token（可定期调用）
+     * 每小时清理已过期的黑名单 token，防止内存无限增长
      */
+    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 3600_000L)
     public void cleanExpiredBlacklist() {
         long now = System.currentTimeMillis();
         Set<String> toRemove = blacklist.entrySet().stream()

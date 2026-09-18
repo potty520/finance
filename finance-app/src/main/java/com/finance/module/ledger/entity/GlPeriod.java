@@ -49,13 +49,10 @@ public class GlPeriod implements Serializable {
     @TableField(exist = false)
     private Integer fiscalPeriod;
 
-    @TableField(exist = false)
     private Long closer;
 
-    @TableField(exist = false)
     private String closerName;
 
-    @TableField(exist = false)
     private LocalDateTime closeTime;
 
     @TableField(exist = false)

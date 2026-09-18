@@ -27,10 +27,14 @@
           <el-tag :type="statusTag(row.status)" size="small">{{ statusText(row.status) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="190" align="center" fixed="right">
+      <el-table-column prop="voucherNo" label="凭证号" width="150">
+        <template #default="{ row }">{{ row.voucherNo || '-' }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="250" align="center" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" size="small" @click="onEdit(row)">编辑</el-button>
           <el-button v-if="!isAudited(row)" link type="warning" size="small" @click="onAudit(row)">审核</el-button>
+          <el-button v-if="isAudited(row) && !row.voucherNo" link type="success" size="small" @click="onVoucher(row)">生成凭证</el-button>
           <el-button link type="danger" size="small" @click="onDelete(row)">删除</el-button>
         </template>
       </el-table-column>
@@ -82,7 +86,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { paymentPage, savePayment, updatePayment, deletePayment, auditPayment, supplierList } from '@/api/payable'
+import { paymentPage, savePayment, updatePayment, deletePayment, auditPayment, paymentVoucher, supplierList } from '@/api/payable'
 
 const PAY_TYPE_MAP = { BANK: '银行转账', CASH: '现金', CHECK: '支票', DRAFT: '汇票', ALIPAY: '支付宝', WECHAT: '微信支付', OTHER: '其他' }
 
@@ -141,6 +145,12 @@ const onAudit = async (row) => {
   await ElMessageBox.confirm(`确定审核付款单「${row.billNo}」吗？`, '提示', { type: 'warning' })
   await auditPayment(row.id)
   ElMessage.success('审核成功')
+  loadData()
+}
+const onVoucher = async (row) => {
+  await ElMessageBox.confirm('将为付款单「' + row.billNo + '」生成记账凭证（借：应付账款，贷：现金/银行存款），确定继续？', '生成凭证', { type: 'warning' })
+  const res = await paymentVoucher(row.id)
+  ElMessage.success('凭证已生成，ID: ' + res.data)
   loadData()
 }
 const onDelete = async (row) => {

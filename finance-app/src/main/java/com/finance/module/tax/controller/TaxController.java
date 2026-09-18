@@ -64,13 +64,17 @@ public class TaxController {
         BigDecimal curInput = jdbcTemplate.queryForObject(sqlInput, BigDecimal.class, periodCode);
         BigDecimal curNet = curOutput.subtract(curInput);
 
-        // 不征税/免税收入 (从收入科目找不含税部分 — 简化从 222101 贷方倒推)
-        // 销项税率假设 13%，则 不含税收入 = 销项税 / 0.13
+        // 应税销售额：直接取已过账凭证中主营业务收入(6001)/其他业务收入(6051)的贷方净额，
+        // 不再用 销项税 / 13% 倒推（旧逻辑在免税、多税率混合场景下会算错）
+        String sqlSales = "SELECT COALESCE(SUM(CASE WHEN e.dc_direction = 'CREDIT' THEN e.amount " +
+            "WHEN e.dc_direction = 'DEBIT' THEN -e.amount ELSE 0 END), 0) " +
+            "FROM gl_voucher_entry e JOIN gl_voucher v ON e.voucher_id = v.id " +
+            "WHERE v.period_code = ? AND v.deleted = 0 AND v.status IN ('POSTED', 'P') " +
+            "AND (e.subject_code LIKE '6001%' OR e.subject_code LIKE '6051%')";
         BigDecimal taxRate = new BigDecimal("0.13");
-        BigDecimal taxableSales = BigDecimal.ZERO;
-        if (curOutput.compareTo(BigDecimal.ZERO) > 0) {
-            taxableSales = curOutput.divide(taxRate, 2, java.math.RoundingMode.HALF_UP);
-        }
+        BigDecimal taxableSales = jdbcTemplate.queryForObject(sqlSales, BigDecimal.class, periodCode);
+        if (taxableSales == null) taxableSales = BigDecimal.ZERO;
+        if (taxableSales.compareTo(BigDecimal.ZERO) < 0) taxableSales = BigDecimal.ZERO;
 
         // 进项税额转出（简化：假设 0，实际需人工填入）
         BigDecimal inputTransferOut = BigDecimal.ZERO;

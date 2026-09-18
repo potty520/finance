@@ -7,6 +7,8 @@ import com.finance.module.ledger.entity.GlBalance;
 import com.finance.module.ledger.entity.GlSubject;
 import com.finance.module.ledger.mapper.GlBalanceMapper;
 import com.finance.module.ledger.mapper.GlSubjectMapper;
+import com.finance.module.ledger.service.GlBalanceService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -26,6 +28,16 @@ public class GlBalanceController {
 
     @Resource
     private GlSubjectMapper subjectMapper;
+
+    @Resource
+    private GlBalanceService balanceService;
+
+    /** 以全部已过账凭证重算总账余额（数据修复用） */
+    @PostMapping("/rebuild")
+    @PreAuthorize("hasAuthority('gl:voucher:post')")
+    public Result<Integer> rebuild() {
+        return Result.success(balanceService.rebuildAll());
+    }
 
     @GetMapping("/list")
     public Result<List<GlBalance>> list(@RequestParam String fiscalYear, @RequestParam Integer fiscalPeriod) {

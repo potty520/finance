@@ -9,6 +9,8 @@ import com.finance.common.exception.BusinessException;
 import com.finance.common.response.PageResult;
 import com.finance.common.response.ResultCode;
 import com.finance.common.util.CommonUtil;
+import com.finance.common.service.CurrentUserResolver;
+import com.finance.module.system.entity.SysUser;
 import com.finance.module.ledger.entity.GlPeriod;
 import com.finance.module.ledger.entity.GlSubject;
 import com.finance.module.ledger.entity.GlVoucher;
@@ -17,7 +19,10 @@ import com.finance.module.ledger.mapper.GlPeriodMapper;
 import com.finance.module.ledger.mapper.GlSubjectMapper;
 import com.finance.module.ledger.mapper.GlVoucherEntryMapper;
 import com.finance.module.ledger.mapper.GlVoucherMapper;
+import com.finance.module.ledger.service.GlBalanceService;
 import com.finance.module.ledger.service.IGlVoucherService;
+import com.finance.module.system.entity.SysConfig;
+import com.finance.module.system.mapper.SysConfigMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +48,12 @@ public class GlVoucherServiceImpl extends ServiceImpl<GlVoucherMapper, GlVoucher
     private GlSubjectMapper subjectMapper;
     @Resource
     private GlPeriodMapper periodMapper;
+    @Resource
+    private GlBalanceService balanceService;
+    @Resource
+    private CurrentUserResolver currentUserResolver;
+    @Resource
+    private SysConfigMapper configMapper;
 
     @Override
     public PageResult<GlVoucher> pageQuery(Long pageNum, Long pageSize, String voucherNo, String status,
@@ -101,6 +112,13 @@ public class GlVoucherServiceImpl extends ServiceImpl<GlVoucherMapper, GlVoucher
         }
         if (voucher.getStatus() == null) voucher.setStatus("DRAFT");
         voucher.setCreateTime(java.time.LocalDateTime.now());
+        if (voucher.getCreateBy() == null) {
+            SysUser cu = currentUserResolver.current();
+            if (cu != null) {
+                voucher.setCreateBy(cu.getId());
+                voucher.setCreateByName(cu.getRealName() != null ? cu.getRealName() : cu.getUsername());
+            }
+        }
         boolean ok = save(voucher);
         if (ok && voucher.getEntries() != null) {
             for (GlVoucherEntry e : voucher.getEntries()) {
@@ -158,6 +176,10 @@ public class GlVoucherServiceImpl extends ServiceImpl<GlVoucherMapper, GlVoucher
         if (!"APPROVING".equals(v.getStatus()) && !"A".equals(v.getStatus())) {
             throw new BusinessException("仅待审核凭证可审核");
         }
+        // 职责分离：审核人不得与制单人为同一人
+        if (pass && sodEnabled() && auditorId != null && auditorId.equals(v.getCreateBy())) {
+            throw new BusinessException("制单人与审核人不能为同一人，请由其他人员审核");
+        }
         if (pass) {
             v.setStatus("APPROVED");
             v.setAuditBy(auditorId);
@@ -200,24 +222,55 @@ public class GlVoucherServiceImpl extends ServiceImpl<GlVoucherMapper, GlVoucher
         if (!"APPROVED".equals(v.getStatus()) && !"A".equals(v.getStatus())) {
             throw new BusinessException("仅审核通过凭证可过账");
         }
+        // 不可过账到已结账期间
+        String pc = v.getPeriodCode();
+        if (pc != null && pc.length() >= 6) {
+            GlPeriod period = periodMapper.selectByYearPeriod(pc.substring(0, 4), Integer.valueOf(pc.substring(4, 6)));
+            if (period != null && "CLOSED".equals(period.getStatus())) {
+                throw new BusinessException(ResultCode.PERIOD_CLOSED);
+            }
+        }
+        // 职责分离：过账人不得与制单人为同一人
+        if (sodEnabled() && posterId != null && posterId.equals(v.getCreateBy())) {
+            throw new BusinessException("制单人与过账人不能为同一人，请由其他人员过账");
+        }
         v.setStatus("POSTED");
         v.setPostBy(posterId);
         v.setPostTime(java.time.LocalDateTime.now());
         v.setUpdateTime(java.time.LocalDateTime.now());
-        return updateById(v);
+        boolean ok = updateById(v);
+        if (ok) {
+            List<GlVoucherEntry> entries = entryMapper.selectByVoucherId(v.getId());
+            if (entries != null) entries.forEach(GlVoucherEntry::afterLoad);
+            balanceService.applyVoucher(v, entries, 1);
+        }
+        return ok;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean unPost(Long id) {
         GlVoucher v = getById(id);
         if (v == null) throw new BusinessException(ResultCode.DATA_NOT_FOUND);
         if (!"POSTED".equals(v.getStatus()) && !"P".equals(v.getStatus())) {
             throw new BusinessException("仅已过账凭证可反过账");
         }
+        SysUser cu = currentUserResolver.current();
+        if (cu != null) {
+            v.setCancelBy(cu.getId());
+            v.setCancelReason("反过账");
+        }
+        v.setCancelTime(java.time.LocalDateTime.now());
         v.setStatus("APPROVED");
         v.setPostTime(null);
         v.setUpdateTime(java.time.LocalDateTime.now());
-        return updateById(v);
+        boolean ok = updateById(v);
+        if (ok) {
+            List<GlVoucherEntry> entries = entryMapper.selectByVoucherId(v.getId());
+            if (entries != null) entries.forEach(GlVoucherEntry::afterLoad);
+            balanceService.applyVoucher(v, entries, -1);
+        }
+        return ok;
     }
 
     @Override
@@ -233,8 +286,13 @@ public class GlVoucherServiceImpl extends ServiceImpl<GlVoucherMapper, GlVoucher
         reverse.setFiscalYear(String.valueOf(LocalDate.now().getYear()));
         reverse.setFiscalPeriod(LocalDate.now().getMonthValue());
         resolvePeriodCode(reverse);
+        GlPeriod rPeriod = periodMapper.selectByYearPeriod(reverse.getFiscalYear(), reverse.getFiscalPeriod());
+        if (rPeriod != null && "CLOSED".equals(rPeriod.getStatus())) {
+            throw new BusinessException("当前期间已结账，无法生成冲销凭证");
+        }
         reverse.setSummary("冲销 " + v.getVoucherNo() + (StrUtil.isBlank(reason) ? "" : " - " + reason));
         BigDecimal td = BigDecimal.ZERO, tc = BigDecimal.ZERO;
+        List<GlVoucherEntry> newEntries = new java.util.ArrayList<>();
         if (v.getEntries() != null) {
             for (GlVoucherEntry e : v.getEntries()) {
                 GlVoucherEntry ne = new GlVoucherEntry();
@@ -242,8 +300,10 @@ public class GlVoucherServiceImpl extends ServiceImpl<GlVoucherMapper, GlVoucher
                 ne.setId(null);
                 ne.setDebitAmount(e.getCreditAmount());
                 ne.setCreditAmount(e.getDebitAmount());
+                ne.setEntryNo(e.getEntryNo());
                 td = td.add(ne.getDebitAmount() == null ? BigDecimal.ZERO : ne.getDebitAmount());
                 tc = tc.add(ne.getCreditAmount() == null ? BigDecimal.ZERO : ne.getCreditAmount());
+                newEntries.add(ne);
             }
         }
         reverse.setTotalDebit(td);
@@ -252,8 +312,24 @@ public class GlVoucherServiceImpl extends ServiceImpl<GlVoucherMapper, GlVoucher
         reverse.setSource("REVERSE");
         reverse.setSourceId(v.getId());
         reverse.setCreateTime(java.time.LocalDateTime.now());
-        save(reverse);
-        return true;
+        if (StrUtil.isBlank(reverse.getVoucherNo())) {
+            reverse.setVoucherNo(generateNextVoucherNo(reverse.getFiscalYear(), reverse.getFiscalPeriod()));
+        }
+        SysUser cu = currentUserResolver.current();
+        if (cu != null) {
+            reverse.setCreateBy(cu.getId());
+            reverse.setCreateByName(cu.getRealName() != null ? cu.getRealName() : cu.getUsername());
+        }
+        boolean ok = save(reverse);
+        if (ok) {
+            // 冲销分录必须落库，否则过账时无金额可写余额
+            for (GlVoucherEntry ne : newEntries) {
+                ne.setVoucherId(reverse.getId());
+                ne.prepareForPersist();
+                entryMapper.insert(ne);
+            }
+        }
+        return ok;
     }
 
     @Override
@@ -312,11 +388,41 @@ public class GlVoucherServiceImpl extends ServiceImpl<GlVoucherMapper, GlVoucher
         return generateNextVoucherNo(year, period);
     }
 
+    /**
+     * 职责分离开关：sys_config 中 gl.voucher.separate.duty = 0 时关闭，默认开启
+     */
+    private boolean sodEnabled() {
+        try {
+            SysConfig c = configMapper.selectOne(new LambdaQueryWrapper<SysConfig>()
+                    .eq(SysConfig::getConfigKey, "gl.voucher.separate.duty")
+                    .last("LIMIT 1"));
+            return c == null || c.getConfigValue() == null || !"0".equals(c.getConfigValue().trim());
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
     @Override
     public String generateNextVoucherNo(String year, Integer period) {
         String periodCode = CommonUtil.buildPeriodCode(year, period);
-        long count = count(new LambdaQueryWrapper<GlVoucher>().eq(GlVoucher::getPeriodCode, periodCode));
-        return String.format("%s-%02d-%04d", year, period, count + 1);
+        // 取该期间最大序号 +1，避免删除凭证后号码复用或并发下按行数计算错位
+        List<GlVoucher> exist = list(new LambdaQueryWrapper<GlVoucher>()
+                .eq(GlVoucher::getPeriodCode, periodCode)
+                .select(GlVoucher::getVoucherNo));
+        int max = 0;
+        for (GlVoucher v : exist) {
+            String no = v.getVoucherNo();
+            if (no == null) continue;
+            int dash = no.lastIndexOf('-');
+            if (dash >= 0 && dash < no.length() - 1) {
+                try {
+                    int seq = Integer.parseInt(no.substring(dash + 1));
+                    if (seq > max) max = seq;
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+        return String.format("%s-%02d-%04d", year, period, max + 1);
     }
 
     private void resolvePeriodCode(GlVoucher voucher) {

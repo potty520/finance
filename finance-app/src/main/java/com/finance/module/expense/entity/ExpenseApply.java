@@ -30,6 +30,9 @@ public class ExpenseApply implements Serializable {
     /** 0-待审 1-通过 2-驳回 3-已付款 */
     private String status;
     private String flowNo;
+    /** 业财一体：由本单生成的记账凭证 */
+    private Long voucherId;
+    private String voucherNo;
     private String remark;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

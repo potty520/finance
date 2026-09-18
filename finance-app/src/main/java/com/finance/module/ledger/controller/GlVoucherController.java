@@ -2,6 +2,8 @@ package com.finance.module.ledger.controller;
 
 import com.finance.common.response.PageResult;
 import com.finance.common.response.Result;
+import com.finance.common.service.CurrentUserResolver;
+import com.finance.module.system.entity.SysUser;
 import com.finance.module.ledger.entity.GlVoucher;
 import com.finance.module.ledger.service.IGlVoucherService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +23,8 @@ public class GlVoucherController {
     @Resource
     private IGlVoucherService voucherService;
 
+    @Resource
+    private CurrentUserResolver currentUserResolver;
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('gl:voucher:list')")
     public Result<PageResult<GlVoucher>> page(
@@ -51,23 +55,29 @@ public class GlVoucherController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('gl:voucher:add', 'gl:voucher:list')")
+    @PreAuthorize("hasAuthority('gl:voucher:add')")
     public Result<Boolean> add(@RequestBody GlVoucher voucher) {
         return Result.success(voucherService.saveWithEntries(voucher));
     }
 
     @PutMapping
-    @PreAuthorize("hasAnyAuthority('gl:voucher:edit', 'gl:voucher:list')")
+    @PreAuthorize("hasAuthority('gl:voucher:edit')")
     public Result<Boolean> edit(@RequestBody GlVoucher voucher) {
         return Result.success(voucherService.updateWithEntries(voucher));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('gl:voucher:delete', 'gl:voucher:list')")
+    @PreAuthorize("hasAuthority('gl:voucher:delete')")
     public Result<Boolean> delete(@PathVariable Long id) {
         GlVoucher v = voucherService.getById(id);
-        if (v != null && ("POSTED".equals(v.getStatus()) || "P".equals(v.getStatus()))) {
-            return Result.error("已过账凭证不可删除");
+        if (v == null) return Result.success(true);
+        String st = v.getStatus();
+        // 只有草稿和被驳回的凭证允许删除；已审核需先取消审核，已过账需先反过账
+        if ("POSTED".equals(st) || "P".equals(st)) {
+            return Result.error("已过账凭证不可删除，请先反过账");
+        }
+        if ("APPROVED".equals(st) || "AUDITED".equals(st) || "A".equals(st) || "SUBMITTED".equals(st)) {
+            return Result.error("已审核/已提交凭证不可删除，请先取消审核");
         }
         return Result.success(voucherService.removeById(id));
     }
@@ -78,35 +88,38 @@ public class GlVoucherController {
     }
 
     @PostMapping("/audit")
-    @PreAuthorize("hasAnyAuthority('gl:voucher:audit', 'gl:voucher:list')")
+    @PreAuthorize("hasAuthority('gl:voucher:audit')")
     public Result<Boolean> audit(@RequestBody Map<String, Object> body) {
         Long id = Long.valueOf(body.get("id").toString());
         boolean pass = Boolean.parseBoolean(body.get("pass").toString());
         String reason = (String) body.get("reason");
-        return Result.success(voucherService.audit(id, 1L, "系统用户", pass, reason));
+        SysUser cu = currentUserResolver.require();
+        return Result.success(voucherService.audit(id, cu.getId(), displayName(cu), pass, reason));
     }
 
     /** 一键审核：草稿/驳回先提交，再审核通过 */
     @PostMapping("/approve/{id}")
-    @PreAuthorize("hasAnyAuthority('gl:voucher:audit', 'gl:voucher:list')")
+    @PreAuthorize("hasAuthority('gl:voucher:audit')")
     public Result<Boolean> approve(@PathVariable Long id) {
-        return Result.success(voucherService.approve(id, 1L, "系统用户"));
+        SysUser cu = currentUserResolver.require();
+        return Result.success(voucherService.approve(id, cu.getId(), displayName(cu)));
     }
 
     @PostMapping("/post/{id}")
-    @PreAuthorize("hasAnyAuthority('gl:voucher:post', 'gl:voucher:list')")
+    @PreAuthorize("hasAuthority('gl:voucher:post')")
     public Result<Boolean> post(@PathVariable Long id) {
-        return Result.success(voucherService.post(id, 1L, "系统用户"));
+        SysUser cu = currentUserResolver.require();
+        return Result.success(voucherService.post(id, cu.getId(), displayName(cu)));
     }
 
     @PostMapping("/unpost/{id}")
-    @PreAuthorize("hasAnyAuthority('gl:voucher:post', 'gl:voucher:list')")
+    @PreAuthorize("hasAuthority('gl:voucher:post')")
     public Result<Boolean> unpost(@PathVariable Long id) {
         return Result.success(voucherService.unPost(id));
     }
 
     @PostMapping("/reverse/{id}")
-    @PreAuthorize("hasAnyAuthority('gl:voucher:reverse', 'gl:voucher:list')")
+    @PreAuthorize("hasAuthority('gl:voucher:reverse')")
     public Result<Boolean> reverse(@PathVariable Long id, @RequestParam(required = false) String reason) {
         return Result.success(voucherService.reverseVoucher(id, reason));
     }
@@ -121,5 +134,9 @@ public class GlVoucherController {
     @PreAuthorize("hasAnyAuthority('gl:voucher:add', 'gl:voucher:list')")
     public Result<String> nextNo(@RequestParam String fiscalYear, @RequestParam Integer fiscalPeriod) {
         return Result.success(voucherService.generateNextVoucherNo(fiscalYear, fiscalPeriod));
+    }
+
+    private String displayName(SysUser u) {
+        return u.getRealName() != null ? u.getRealName() : u.getUsername();
     }
 }
